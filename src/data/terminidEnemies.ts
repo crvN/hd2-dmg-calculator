@@ -1,4 +1,4 @@
-export type TerminidBodyPart = {
+export type EnemyBodyPart = {
   id: string;
   label: string;
   hp: number;
@@ -7,19 +7,14 @@ export type TerminidBodyPart = {
   explosiveResistPercent: number;
 };
 
-export type TerminidEnemy = {
+export type Enemy = {
   id: string;
   name: string;
   wikiUrl: string;
-  parts: TerminidBodyPart[];
+  parts: EnemyBodyPart[];
 };
 
-/**
- * Terminid units only (no structures/flora). HP uses wiki “default” / Medium-and-below values where difficulty splits exist.
- * Armor uses AV 0–10 per https://helldivers.wiki.gg/wiki/Damage#Armor_Penetration_&_Armor_Values
- * Durable % from anatomy “Location” when “Durable2” is “-”, else from “Durable2” when it is a 0–100% durability value.
- */
-export const TERMINID_ENEMIES: TerminidEnemy[] = [
+export const ENEMIES: Enemy[] = [
   {
     id: "warrior",
     name: "Warrior",
