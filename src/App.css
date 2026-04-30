@@ -4,6 +4,68 @@
   padding: 1.5rem 1.25rem 3rem;
 }
 
+.tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0.2rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.tab {
+  flex: 1;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  transition: background 0.12s, color 0.12s;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-active {
+  color: var(--text);
+  background: var(--input-bg);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.wiki-note {
+  font-size: 0.82rem;
+  margin: 0 0 1rem;
+  line-height: 1.45;
+}
+
+.wiki-note a {
+  color: var(--accent);
+}
+
+.select {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.5rem 0.55rem;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+.wiki-readonly-mode {
+  margin-top: 0.5rem;
+}
+
+.wiki-enemy-link {
+  margin-top: 0;
+}
+
 .header {
   margin-bottom: 1.5rem;
 }

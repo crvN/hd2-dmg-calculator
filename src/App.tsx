@@ -6,6 +6,14 @@ import {
   hitmarkerFor,
   shotsToKill,
 } from './damage'
+import { SUPPORT_WEAPON_PRESETS } from './data/supportWeapons'
+import { TERMINID_ENEMIES } from './data/terminidEnemies'
+import { AppHeader } from './components/AppHeader'
+import { EntryModeTabs } from './components/EntryModeTabs'
+import { ResultCard } from './components/ResultCard'
+import { TargetCard } from './components/TargetCard'
+import { WeaponCard } from './components/WeaponCard'
+import type { DamageMode, EntryMode, ParsedResult } from './types'
 import './App.css'
 
 function num(v: string, fallback = 0): number {
@@ -14,6 +22,12 @@ function num(v: string, fallback = 0): number {
 }
 
 export default function App() {
+  const [entryMode, setEntryMode] = useState<EntryMode>('manual')
+
+  const [wikiEnemyId, setWikiEnemyId] = useState(TERMINID_ENEMIES[0]!.id)
+  const [wikiPartId, setWikiPartId] = useState(TERMINID_ENEMIES[0]!.parts[0]!.id)
+  const [wikiWeaponId, setWikiWeaponId] = useState(SUPPORT_WEAPON_PRESETS[0]!.id)
+
   const [hp, setHp] = useState('100')
   const [durablePct, setDurablePct] = useState('30')
   const [armor, setArmor] = useState('2')
@@ -23,26 +37,38 @@ export default function App() {
   const [durableDmg, setDurableDmg] = useState('23')
   const [penetration, setPenetration] = useState('2')
 
-  const [damageMode, setDamageMode] = useState<'ballistic' | 'explosive' | 'combined'>('ballistic')
+  const [damageMode, setDamageMode] = useState<DamageMode>('ballistic')
   const [explosiveDmg, setExplosiveDmg] = useState('150')
 
-  const parsed = useMemo(() => {
-    const hpN = num(hp, 0)
-    const dPct = num(durablePct, 0)
-    const armorN = num(armor, 0)
-    const resN = num(explosiveResist, 0)
-    const std = num(standardDmg, 0)
-    const dur = num(durableDmg, 0)
-    const ap = num(penetration, 0)
-    const expD = num(explosiveDmg, 0)
+  const wikiPart = useMemo(() => {
+    const enemy = TERMINID_ENEMIES.find((e) => e.id === wikiEnemyId)
+    return enemy?.parts.find((p) => p.id === wikiPartId) ?? enemy?.parts[0]
+  }, [wikiEnemyId, wikiPartId])
+
+  const wikiWeapon = useMemo(
+    () => SUPPORT_WEAPON_PRESETS.find((w) => w.id === wikiWeaponId),
+    [wikiWeaponId],
+  )
+
+  const parsed = useMemo<ParsedResult>(() => {
+    const fromWiki = entryMode === 'wiki'
+    const hpN = fromWiki ? (wikiPart?.hp ?? 0) : num(hp, 0)
+    const dPct = fromWiki ? (wikiPart?.durablePercent ?? 0) : num(durablePct, 0)
+    const armorN = fromWiki ? (wikiPart?.armorRating ?? 0) : num(armor, 0)
+    const resN = fromWiki ? (wikiPart?.explosiveResistPercent ?? 0) : num(explosiveResist, 0)
+    const std = fromWiki ? (wikiWeapon?.standardDamage ?? 0) : num(standardDmg, 0)
+    const dur = fromWiki ? (wikiWeapon?.durableDamage ?? 0) : num(durableDmg, 0)
+    const ap = fromWiki ? (wikiWeapon?.penetration ?? 0) : num(penetration, 0)
+    const expD = fromWiki ? (wikiWeapon?.explosiveDamage ?? 0) : num(explosiveDmg, 0)
+    const mode: DamageMode = fromWiki ? (wikiWeapon?.damageMode ?? 'ballistic') : damageMode
 
     let ballistic = 0
     let explosive = 0
 
-    if (damageMode === 'ballistic' || damageMode === 'combined') {
+    if (mode === 'ballistic' || mode === 'combined') {
       ballistic = ballisticDamageAfterArmor(std, dur, dPct, ap, armorN)
     }
-    if (damageMode === 'explosive' || damageMode === 'combined') {
+    if (mode === 'explosive' || mode === 'combined') {
       explosive = explosiveDamageAfterArmor(expD, armorN, resN)
     }
 
@@ -67,8 +93,12 @@ export default function App() {
       shots,
       ballisticMarker,
       explosiveMarker,
+      damageModeEffective: mode,
     }
   }, [
+    entryMode,
+    wikiPart,
+    wikiWeapon,
     hp,
     durablePct,
     armor,
@@ -80,164 +110,75 @@ export default function App() {
     explosiveDmg,
   ])
 
+  const selectedEnemy = TERMINID_ENEMIES.find((e) => e.id === wikiEnemyId)
+  const selectedWeapon = SUPPORT_WEAPON_PRESETS.find((w) => w.id === wikiWeaponId)
+
+  function handleWikiEnemyChange(id: string) {
+    setWikiEnemyId(id)
+    const e = TERMINID_ENEMIES.find((x) => x.id === id)
+    if (e?.parts[0]) setWikiPartId(e.parts[0].id)
+  }
+
   return (
     <div className="app">
-      <header className="header">
-        <h1>Helldivers 2 — shots to break</h1>
-        <p className="subtitle">
-          Armor (AP vs rating), durable mix, explosive AP3 and resistance. Educational helper; verify in-game.
+      <AppHeader />
+      <EntryModeTabs entryMode={entryMode} onChange={setEntryMode} />
+
+      {entryMode === 'wiki' && (
+        <p className="wiki-note muted">
+          Support weapons and Terminid body parts from{' '}
+          <a href="https://helldivers.wiki.gg/wiki/Stratagems">Stratagems</a> /{' '}
+          <a href="https://helldivers.wiki.gg/wiki/Terminids">Terminids</a>. Values are a curated snapshot; patch
+          changes may drift.
         </p>
-      </header>
+      )}
 
       <div className="grid">
-        <section className="card">
-          <h2>Target (body part)</h2>
-          <label className="field">
-            <span>HP</span>
-            <input inputMode="decimal" value={hp} onChange={(e) => setHp(e.target.value)} />
-          </label>
-          <label className="field">
-            <span>Durability % (0–100)</span>
-            <input
-              inputMode="decimal"
-              value={durablePct}
-              onChange={(e) => setDurablePct(e.target.value)}
-            />
-            <small>How much of the hit uses durable damage vs standard (wiki part stat).</small>
-          </label>
-          <label className="field">
-            <span>Armor rating (0–10)</span>
-            <input inputMode="numeric" value={armor} onChange={(e) => setArmor(e.target.value)} />
-          </label>
-          <label className="field">
-            <span>Explosive resistance % (0–100)</span>
-            <input
-              inputMode="decimal"
-              value={explosiveResist}
-              onChange={(e) => setExplosiveResist(e.target.value)}
-            />
-            <small>Reduces only the explosive portion of the hit.</small>
-          </label>
-        </section>
-
-        <section className="card">
-          <h2>Weapon</h2>
-          <fieldset className="mode">
-            <legend>Damage profile</legend>
-            <label className="radio">
-              <input
-                type="radio"
-                name="mode"
-                checked={damageMode === 'ballistic'}
-                onChange={() => setDamageMode('ballistic')}
-              />
-              Ballistic / non-explosive only
-            </label>
-            <label className="radio">
-              <input
-                type="radio"
-                name="mode"
-                checked={damageMode === 'explosive'}
-                onChange={() => setDamageMode('explosive')}
-              />
-              Explosive only (AP {EXPLOSIVE_AP})
-            </label>
-            <label className="radio">
-              <input
-                type="radio"
-                name="mode"
-                checked={damageMode === 'combined'}
-                onChange={() => setDamageMode('combined')}
-              />
-              Combined (ballistic + separate explosive value)
-            </label>
-          </fieldset>
-
-          {(damageMode === 'ballistic' || damageMode === 'combined') && (
-            <>
-              <label className="field">
-                <span>Standard damage</span>
-                <input
-                  inputMode="decimal"
-                  value={standardDmg}
-                  onChange={(e) => setStandardDmg(e.target.value)}
-                />
-              </label>
-              <label className="field">
-                <span>Durable damage</span>
-                <input
-                  inputMode="decimal"
-                  value={durableDmg}
-                  onChange={(e) => setDurableDmg(e.target.value)}
-                />
-              </label>
-              <label className="field">
-                <span>Armor penetration (0–10)</span>
-                <input
-                  inputMode="numeric"
-                  value={penetration}
-                  onChange={(e) => setPenetration(e.target.value)}
-                />
-              </label>
-            </>
-          )}
-
-          {(damageMode === 'explosive' || damageMode === 'combined') && (
-            <label className="field">
-              <span>Explosive damage (listed explosive)</span>
-              <input
-                inputMode="decimal"
-                value={explosiveDmg}
-                onChange={(e) => setExplosiveDmg(e.target.value)}
-              />
-              <small>
-                Explosive uses AP {EXPLOSIVE_AP} vs armor, then × (1 − explosive resistance). Listed value is
-                applied as full “explosive” damage (no standard/durable split on this portion).
-              </small>
-            </label>
-          )}
-        </section>
+        <TargetCard
+          entryMode={entryMode}
+          manual={{
+            hp,
+            onHpChange: setHp,
+            durablePct,
+            onDurablePctChange: setDurablePct,
+            armor,
+            onArmorChange: setArmor,
+            explosiveResist,
+            onExplosiveResistChange: setExplosiveResist,
+          }}
+          wiki={{
+            wikiEnemyId,
+            wikiPartId,
+            selectedEnemy,
+            enemies: TERMINID_ENEMIES,
+            onWikiEnemyChange: handleWikiEnemyChange,
+            onWikiPartChange: setWikiPartId,
+          }}
+        />
+        <WeaponCard
+          entryMode={entryMode}
+          manual={{
+            damageMode,
+            onDamageModeChange: setDamageMode,
+            standardDmg,
+            onStandardDmgChange: setStandardDmg,
+            durableDmg,
+            onDurableDmgChange: setDurableDmg,
+            penetration,
+            onPenetrationChange: setPenetration,
+            explosiveDmg,
+            onExplosiveDmgChange: setExplosiveDmg,
+          }}
+          wiki={{
+            wikiWeaponId,
+            onWikiWeaponChange: setWikiWeaponId,
+            weapons: SUPPORT_WEAPON_PRESETS,
+            selectedWeapon,
+          }}
+        />
       </div>
 
-      <section className="card result">
-        <h2>Result</h2>
-        <div className="result-main">
-          {parsed.shots === null ? (
-            <p className="warn">No damage per shot (ricochet or zero inputs). Cannot reach HP.</p>
-          ) : (
-            <p className="shots">
-              Shots required: <strong>{parsed.shots}</strong>
-            </p>
-          )}
-        </div>
-        <dl className="breakdown">
-          {(damageMode === 'ballistic' || damageMode === 'combined') && (
-            <>
-              <dt>Ballistic damage / shot</dt>
-              <dd>
-                {parsed.ballistic}{' '}
-                <span className={`tag tag-${parsed.ballisticMarker}`}>{parsed.ballisticMarker}</span>
-              </dd>
-            </>
-          )}
-          {(damageMode === 'explosive' || damageMode === 'combined') && (
-            <>
-              <dt>Explosive damage / shot</dt>
-              <dd>
-                {parsed.explosive}{' '}
-                <span className={`tag tag-${parsed.explosiveMarker}`}>{parsed.explosiveMarker}</span>
-                <span className="muted"> (AP {EXPLOSIVE_AP})</span>
-              </dd>
-            </>
-          )}
-          <dt>Total damage / shot</dt>
-          <dd>{parsed.total}</dd>
-        </dl>
-        <p className="muted fineprint">
-          Ballistic: floor( floor(Std×(1−D%) + Dur×D%) × armor mult ). Explosive: floor(Exp × armor mult × (1−resist)).
-          Armor mult: AP &gt; armor → 100%, AP = armor → 65%, AP &lt; armor → 0%.
-        </p>
-      </section>
+      <ResultCard parsed={parsed} />
     </div>
   )
 }
