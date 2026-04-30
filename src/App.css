@@ -66,6 +66,28 @@
   margin-top: 0;
 }
 
+.part-stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 1rem;
+  margin: 0 0 0.65rem;
+  padding: 0.55rem 0.65rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.86rem;
+}
+
+.part-stats dt {
+  margin: 0;
+  color: var(--muted);
+}
+
+.part-stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .header {
   margin-bottom: 1.5rem;
 }
@@ -242,4 +264,8 @@
   font-size: 0.72rem;
   line-height: 1.4;
   margin: 1rem 0 0;
+}
+
+.no-margin {
+  margin: 0;
 }

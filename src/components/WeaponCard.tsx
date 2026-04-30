@@ -1,42 +1,46 @@
-import { EXPLOSIVE_AP } from '../damage'
-import type { SupportWeaponPreset } from '../data/supportWeapons'
-import type { DamageMode, EntryMode } from '../types'
+import { EXPLOSIVE_AP } from "../damage";
+import type { SupportWeaponPreset } from "../data/supportWeapons";
+import type { DamageMode, EntryMode } from "../types";
 
 type ManualWeaponForm = {
-  damageMode: DamageMode
-  onDamageModeChange: (value: DamageMode) => void
-  standardDmg: string
-  onStandardDmgChange: (value: string) => void
-  durableDmg: string
-  onDurableDmgChange: (value: string) => void
-  penetration: string
-  onPenetrationChange: (value: string) => void
-  explosiveDmg: string
-  onExplosiveDmgChange: (value: string) => void
-}
+  damageMode: DamageMode;
+  onDamageModeChange: (value: DamageMode) => void;
+  standardDmg: string;
+  onStandardDmgChange: (value: string) => void;
+  durableDmg: string;
+  onDurableDmgChange: (value: string) => void;
+  penetration: string;
+  onPenetrationChange: (value: string) => void;
+  explosiveDmg: string;
+  onExplosiveDmgChange: (value: string) => void;
+};
 
 type WikiWeaponForm = {
-  wikiWeaponId: string
-  onWikiWeaponChange: (value: string) => void
-  weapons: SupportWeaponPreset[]
-  selectedWeapon?: SupportWeaponPreset
-}
+  wikiWeaponId: string;
+  onWikiWeaponChange: (value: string) => void;
+  weapons: SupportWeaponPreset[];
+  selectedWeapon?: SupportWeaponPreset;
+};
 
 type WeaponCardProps = {
-  entryMode: EntryMode
-  manual: ManualWeaponForm
-  wiki: WikiWeaponForm
-}
+  entryMode: EntryMode;
+  manual: ManualWeaponForm;
+  wiki: WikiWeaponForm;
+};
 
 export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
   return (
     <section className="card">
       <h2>Weapon</h2>
-      {entryMode === 'wiki' ? (
+      {entryMode === "wiki" ? (
         <>
           <label className="field">
             <span>Support weapon</span>
-            <select className="select" value={wiki.wikiWeaponId} onChange={(e) => wiki.onWikiWeaponChange(e.target.value)}>
+            <select
+              className="select"
+              value={wiki.wikiWeaponId}
+              onChange={(e) => wiki.onWikiWeaponChange(e.target.value)}
+            >
               {wiki.weapons.map((weapon) => (
                 <option key={weapon.id} value={weapon.id}>
                   {weapon.name}
@@ -44,14 +48,22 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
               ))}
             </select>
           </label>
-          {wiki.selectedWeapon?.notes && <p className="muted fineprint">{wiki.selectedWeapon.notes}</p>}
+          {wiki.selectedWeapon?.notes && (
+            <p className="muted fineprint">{wiki.selectedWeapon.notes}</p>
+          )}
           <fieldset className="mode wiki-readonly-mode">
             <legend>Damage profile (from preset)</legend>
-            <p className="muted fineprint">
-              {wiki.selectedWeapon?.damageMode === 'ballistic' && 'Ballistic / non-explosive only'}
-              {wiki.selectedWeapon?.damageMode === 'explosive' &&
+            <p className="muted fineprint no-margin">
+              {wiki.selectedWeapon?.damageMode === "ballistic" &&
+                "Ballistic / non-explosive only"}
+              {wiki.selectedWeapon?.damageMode === "explosive" &&
                 `Explosive only (AP ${EXPLOSIVE_AP} vs armor in this app)`}
-              {wiki.selectedWeapon?.damageMode === 'combined' && 'Combined (ballistic + listed explosive portion)'}
+              {wiki.selectedWeapon?.damageMode === "combined" &&
+                "Combined (ballistic + listed explosive portion)"}
+              <br />
+              Standard damage: {wiki.selectedWeapon?.standardDamage}
+              <br />
+              Durable damage: {wiki.selectedWeapon?.durableDamage}
             </p>
           </fieldset>
         </>
@@ -63,8 +75,8 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
               <input
                 type="radio"
                 name="mode"
-                checked={manual.damageMode === 'ballistic'}
-                onChange={() => manual.onDamageModeChange('ballistic')}
+                checked={manual.damageMode === "ballistic"}
+                onChange={() => manual.onDamageModeChange("ballistic")}
               />
               Ballistic / non-explosive only
             </label>
@@ -72,8 +84,8 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
               <input
                 type="radio"
                 name="mode"
-                checked={manual.damageMode === 'explosive'}
-                onChange={() => manual.onDamageModeChange('explosive')}
+                checked={manual.damageMode === "explosive"}
+                onChange={() => manual.onDamageModeChange("explosive")}
               />
               Explosive only (AP {EXPLOSIVE_AP})
             </label>
@@ -81,14 +93,15 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
               <input
                 type="radio"
                 name="mode"
-                checked={manual.damageMode === 'combined'}
-                onChange={() => manual.onDamageModeChange('combined')}
+                checked={manual.damageMode === "combined"}
+                onChange={() => manual.onDamageModeChange("combined")}
               />
               Combined (ballistic + separate explosive value)
             </label>
           </fieldset>
 
-          {(manual.damageMode === 'ballistic' || manual.damageMode === 'combined') && (
+          {(manual.damageMode === "ballistic" ||
+            manual.damageMode === "combined") && (
             <>
               <label className="field">
                 <span>Standard damage</span>
@@ -117,7 +130,8 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
             </>
           )}
 
-          {(manual.damageMode === 'explosive' || manual.damageMode === 'combined') && (
+          {(manual.damageMode === "explosive" ||
+            manual.damageMode === "combined") && (
             <label className="field">
               <span>Explosive damage (listed explosive)</span>
               <input
@@ -126,13 +140,14 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
                 onChange={(e) => manual.onExplosiveDmgChange(e.target.value)}
               />
               <small>
-                Explosive uses AP {EXPLOSIVE_AP} vs armor, then × (1 − explosive resistance). Listed value is applied
-                as full “explosive” damage (no standard/durable split on this portion).
+                Explosive uses AP {EXPLOSIVE_AP} vs armor, then × (1 − explosive
+                resistance). Listed value is applied as full “explosive” damage
+                (no standard/durable split on this portion).
               </small>
             </label>
           )}
         </>
       )}
     </section>
-  )
+  );
 }
