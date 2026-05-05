@@ -1,4 +1,5 @@
-import type { TerminidEnemy } from "../data/terminidEnemies";
+import type { WikiFactionId } from "../data";
+import type { Enemy } from "../data/types";
 import type { EntryMode } from "../types";
 
 type ManualTargetForm = {
@@ -12,11 +13,19 @@ type ManualTargetForm = {
   onExplosiveResistChange: (value: string) => void;
 };
 
+type WikiFactionOption = {
+  id: WikiFactionId;
+  label: string;
+};
+
 type WikiTargetForm = {
+  wikiFactionId: WikiFactionId;
+  wikiFactions: readonly WikiFactionOption[];
+  onWikiFactionChange: (value: WikiFactionId) => void;
   wikiEnemyId: string;
   wikiPartId: string;
-  selectedEnemy?: TerminidEnemy;
-  enemies: TerminidEnemy[];
+  selectedEnemy?: Enemy;
+  enemies: Enemy[];
   onWikiEnemyChange: (value: string) => void;
   onWikiPartChange: (value: string) => void;
 };
@@ -38,7 +47,23 @@ export function TargetCard({ entryMode, manual, wiki }: TargetCardProps) {
       {entryMode === "wiki" ? (
         <>
           <label className="field">
-            <span>Terminid</span>
+            <span>Faction</span>
+            <select
+              className="select"
+              value={wiki.wikiFactionId}
+              onChange={(e) =>
+                wiki.onWikiFactionChange(e.target.value as WikiFactionId)
+              }
+            >
+              {wiki.wikiFactions.map((faction) => (
+                <option key={faction.id} value={faction.id}>
+                  {faction.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            <span>Enemy</span>
             <select
               className="select"
               value={wiki.wikiEnemyId}
