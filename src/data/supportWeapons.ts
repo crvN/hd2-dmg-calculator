@@ -9,6 +9,17 @@ export type SupportWeaponPreset = {
   damageMode: DamageMode;
   explosiveDamage: number;
   notes?: string;
+  chargeProfile?: {
+    maxChargeSeconds: number;
+    maxDamageSeconds: number;
+    damageRampStartSeconds: number;
+    safeModeEndSeconds: number;
+    criticalStartSeconds: number;
+    safeHoldPercent: number;
+    dangerPercent: number;
+    explosionPercent: number;
+    maxDamageMultiplier: number;
+  };
 };
 
 export const SUPPORT_WEAPON_PRESETS: SupportWeaponPreset[] = [
@@ -58,6 +69,28 @@ export const SUPPORT_WEAPON_PRESETS: SupportWeaponPreset[] = [
     explosiveDamage: 0,
     notes:
       "Wiki lists Laser type; this app treats the beam as ballistic for the same AP/durable formula.",
+  },
+  {
+    id: "rs-422",
+    name: "RS-422 Railgun",
+    standardDamage: 600,
+    durableDamage: 225,
+    penetration: 5,
+    damageMode: "ballistic",
+    explosiveDamage: 0,
+    notes:
+      "Safe mode sits at 60% charge. Unsafe mode scales up to 2.5x damage at 2.5s; at 3.0s (100%) the gun explodes.",
+    chargeProfile: {
+      maxChargeSeconds: 3,
+      maxDamageSeconds: 2.5,
+      damageRampStartSeconds: 0.45,
+      safeModeEndSeconds: 0.45,
+      criticalStartSeconds: 2.5,
+      safeHoldPercent: 60,
+      dangerPercent: 90,
+      explosionPercent: 100,
+      maxDamageMultiplier: 2.5,
+    },
   },
   {
     id: "eat-17",
