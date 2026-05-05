@@ -78,3 +78,14 @@ export function shotsToKill(hp: number, damagePerShot: number): number | null {
   if (damagePerShot <= 0) return null
   return Math.ceil(hp / damagePerShot)
 }
+
+/**
+ * Spreadsheet-aligned railgun unsafe multiplier:
+ * IF(t > 0.45, TRUNC((1 + (t - 0.5) / 1.6666) * 100) / 100, 1)
+ */
+export function railgunChargeDamageMultiplier(chargeSeconds: number): number {
+  if (!Number.isFinite(chargeSeconds) || chargeSeconds <= 0.45) return 1
+  const unsafePercent = Math.trunc((1 + (chargeSeconds - 0.5) / 1.6666) * 100)
+  const multiplier = unsafePercent / 100
+  return Math.min(2.5, Math.max(1, multiplier))
+}
