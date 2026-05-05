@@ -33,9 +33,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          # Pin to stable major to avoid sudden npm/runtime regressions.
-          node-version: "22"
-          registry-url: "https://registry.npmjs.org"
+          node-version-file: ".nvmrc"
           cache: "npm"
           cache-dependency-path: package-lock.json
       - name: Show runtime versions
