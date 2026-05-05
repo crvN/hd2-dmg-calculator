@@ -31,6 +31,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
+          registry-url: "https://registry.npmjs.org"
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Lint
@@ -46,6 +47,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
+          registry-url: "https://registry.npmjs.org"
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Test
@@ -66,6 +68,7 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "npm"
           cache-dependency-path: package-lock.json
+          registry-url: "https://registry.npmjs.org"
       - name: Show runtime versions
         run: |
           node --version
