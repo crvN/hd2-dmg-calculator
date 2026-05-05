@@ -1,5 +1,3 @@
-import { describe, expect, it } from '@jest/globals'
-
 import {
   EXPLOSIVE_AP,
   armorDamageMultiplier,
@@ -9,6 +7,7 @@ import {
   explosiveDamageAfterArmor,
   hitmarkerFor,
   mixedBallisticBaseDamage,
+  railgunChargeDamageMultiplier,
   shotsToKill,
 } from './damage'
 
@@ -132,5 +131,24 @@ describe('shotsToKill', () => {
   it('returns the ceiling of hp divided by damage', () => {
     expect(shotsToKill(100, 30)).toBe(4)
     expect(shotsToKill(90, 30)).toBe(3)
+  })
+})
+
+describe('railgunChargeDamageMultiplier', () => {
+  it('stays at safe-mode multiplier up to 0.45s', () => {
+    expect(railgunChargeDamageMultiplier(0)).toBe(1)
+    expect(railgunChargeDamageMultiplier(0.45)).toBe(1)
+  })
+
+  it('matches spreadsheet-style unsafe formula with truncation', () => {
+    expect(railgunChargeDamageMultiplier(1)).toBe(1.3)
+    expect(railgunChargeDamageMultiplier(2.5)).toBe(2.2)
+    expect(railgunChargeDamageMultiplier(3)).toBe(2.5)
+  })
+
+  it('clamps invalid and over-range values', () => {
+    expect(railgunChargeDamageMultiplier(Number.NaN)).toBe(1)
+    expect(railgunChargeDamageMultiplier(Number.POSITIVE_INFINITY)).toBe(1)
+    expect(railgunChargeDamageMultiplier(99)).toBe(2.5)
   })
 })

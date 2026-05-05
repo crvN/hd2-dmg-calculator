@@ -4,6 +4,7 @@ import {
   ballisticDamageAfterArmor,
   explosiveDamageAfterArmor,
   hitmarkerFor,
+  railgunChargeDamageMultiplier,
   shotsToKill,
 } from "../damage";
 import {
@@ -76,6 +77,9 @@ export function useShotCalculator() {
 
   const wikiDamageMultiplier = useMemo(() => {
     if (!wikiChargeProfile) return 1;
+    if (wikiWeapon?.id === "rs-422") {
+      return railgunChargeDamageMultiplier(wikiChargeSecondsClamped);
+    }
     if (
       wikiChargeSecondsClamped <=
       wikiChargeProfile.damageRampStartSeconds + Number.EPSILON
@@ -95,7 +99,7 @@ export function useShotCalculator() {
           rampDuration
         : 1;
     return 1 + (wikiChargeProfile.maxDamageMultiplier - 1) * ratio;
-  }, [wikiChargeProfile, wikiChargeSecondsClamped]);
+  }, [wikiChargeProfile, wikiChargeSecondsClamped, wikiWeapon?.id]);
 
   const wikiChargePercent = useMemo(() => {
     if (!wikiChargeProfile) return 0;
