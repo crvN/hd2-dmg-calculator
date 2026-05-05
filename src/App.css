@@ -62,6 +62,116 @@
   margin-top: 0.5rem;
 }
 
+.railgun-charge {
+  margin-top: 0.5rem;
+}
+
+.railgun-charge input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.railgun-charge progress {
+  width: 100%;
+  height: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.railgun-zones {
+  position: relative;
+  width: 100%;
+  height: 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  margin-bottom: 0.45rem;
+}
+
+.railgun-zone-marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.railgun-breakpoints {
+  position: relative;
+  height: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.railgun-breakpoint {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.railgun-breakpoint-line {
+  width: 1px;
+  height: 0.45rem;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.railgun-breakpoint-label {
+  margin-top: 0.1rem;
+  font-size: 0.63rem;
+  color: var(--muted);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.railgun-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+}
+
+.railgun-presets button {
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 0.74rem;
+  padding: 0.34rem 0.4rem;
+  cursor: pointer;
+}
+
+.railgun-presets button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.railgun-dmg-preview {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.8rem;
+  margin: 0 0 0.45rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  font-size: 0.82rem;
+}
+
+.railgun-dmg-preview dt {
+  margin: 0;
+  color: var(--muted);
+}
+
+.railgun-dmg-preview dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.railgun-charge-meta {
+  margin-top: 0.2rem;
+}
+
 .wiki-enemy-link {
   margin-top: 0;
 }

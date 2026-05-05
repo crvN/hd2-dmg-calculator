@@ -19,6 +19,14 @@ function num(v: string, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function clamp(v: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, v));
+}
+
+function round2(v: number): number {
+  return Math.round(v * 100) / 100;
+}
+
 export function useShotCalculator() {
   const [entryMode, setEntryMode] = useState<EntryMode>("manual");
 
@@ -31,6 +39,7 @@ export function useShotCalculator() {
   const [wikiWeaponId, setWikiWeaponId] = useState(
     SUPPORT_WEAPON_PRESETS[0]!.id,
   );
+  const [wikiChargeSeconds, setWikiChargeSeconds] = useState(0);
 
   const [hp, setHp] = useState("100");
   const [durablePct, setDurablePct] = useState("30");
@@ -58,6 +67,69 @@ export function useShotCalculator() {
     () => SUPPORT_WEAPON_PRESETS.find((w) => w.id === wikiWeaponId),
     [wikiWeaponId],
   );
+  const wikiChargeProfile = wikiWeapon?.chargeProfile;
+
+  const wikiChargeSecondsClamped = useMemo(() => {
+    if (!wikiChargeProfile) return 0;
+    return clamp(wikiChargeSeconds, 0, wikiChargeProfile.maxChargeSeconds);
+  }, [wikiChargeProfile, wikiChargeSeconds]);
+
+  const wikiDamageMultiplier = useMemo(() => {
+    if (!wikiChargeProfile) return 1;
+    if (
+      wikiChargeSecondsClamped <=
+      wikiChargeProfile.damageRampStartSeconds + Number.EPSILON
+    ) {
+      return 1;
+    }
+    const chargeUntilMaxDamage = Math.min(
+      wikiChargeSecondsClamped,
+      wikiChargeProfile.maxDamageSeconds,
+    );
+    const rampDuration =
+      wikiChargeProfile.maxDamageSeconds -
+      wikiChargeProfile.damageRampStartSeconds;
+    const ratio =
+      rampDuration > 0
+        ? (chargeUntilMaxDamage - wikiChargeProfile.damageRampStartSeconds) /
+          rampDuration
+        : 1;
+    return 1 + (wikiChargeProfile.maxDamageMultiplier - 1) * ratio;
+  }, [wikiChargeProfile, wikiChargeSecondsClamped]);
+
+  const wikiChargePercent = useMemo(() => {
+    if (!wikiChargeProfile) return 0;
+    const t = wikiChargeSecondsClamped;
+    const safeEnd = wikiChargeProfile.safeModeEndSeconds;
+    const criticalStart = wikiChargeProfile.criticalStartSeconds;
+    const max = wikiChargeProfile.maxChargeSeconds;
+    const safePct = wikiChargeProfile.safeHoldPercent;
+    const dangerPct = wikiChargeProfile.dangerPercent;
+    const explodePct = wikiChargeProfile.explosionPercent;
+
+    if (t <= 0) return 0;
+    if (t <= safeEnd && safeEnd > 0) {
+      return Math.round((t / safeEnd) * safePct);
+    }
+    if (t <= criticalStart && criticalStart > safeEnd) {
+      const ratio = (t - safeEnd) / (criticalStart - safeEnd);
+      return Math.round(safePct + ratio * (dangerPct - safePct));
+    }
+    if (t <= max && max > criticalStart) {
+      const ratio = (t - criticalStart) / (max - criticalStart);
+      return Math.round(dangerPct + ratio * (explodePct - dangerPct));
+    }
+    return explodePct;
+  }, [wikiChargeProfile, wikiChargeSecondsClamped]);
+
+  const wikiBaseStandardDamage = wikiWeapon?.standardDamage ?? 0;
+  const wikiBaseDurableDamage = wikiWeapon?.durableDamage ?? 0;
+  const wikiChargedStandardDamage = round2(
+    wikiBaseStandardDamage * wikiDamageMultiplier,
+  );
+  const wikiChargedDurableDamage = round2(
+    wikiBaseDurableDamage * wikiDamageMultiplier,
+  );
 
   const parsed = useMemo<ParsedResult>(() => {
     const fromWiki = entryMode === "wiki";
@@ -69,12 +141,15 @@ export function useShotCalculator() {
     const resN = fromWiki
       ? (wikiPart?.explosiveResistPercent ?? 0)
       : num(explosiveResist, 0);
-    const std = fromWiki
+    const stdBase = fromWiki
       ? (wikiWeapon?.standardDamage ?? 0)
       : num(standardDmg, 0);
-    const dur = fromWiki
+    const durBase = fromWiki
       ? (wikiWeapon?.durableDamage ?? 0)
       : num(durableDmg, 0);
+    const chargeMultiplier = fromWiki ? wikiDamageMultiplier : 1;
+    const std = stdBase * chargeMultiplier;
+    const dur = durBase * chargeMultiplier;
     const ap = fromWiki ? (wikiWeapon?.penetration ?? 0) : num(penetration, 0);
     const expD = fromWiki
       ? (wikiWeapon?.explosiveDamage ?? 0)
@@ -120,6 +195,7 @@ export function useShotCalculator() {
     entryMode,
     wikiPart,
     wikiWeapon,
+    wikiDamageMultiplier,
     hp,
     durablePct,
     armor,
@@ -150,6 +226,11 @@ export function useShotCalculator() {
     setWikiEnemyId(id);
     const e = wikiEnemyList.find((x) => x.id === id);
     if (e?.parts[0]) setWikiPartId(e.parts[0].id);
+  }
+
+  function handleWikiChargeChange(value: number) {
+    if (!wikiChargeProfile) return;
+    setWikiChargeSeconds(clamp(value, 0, wikiChargeProfile.maxChargeSeconds));
   }
 
   return {
@@ -199,6 +280,24 @@ export function useShotCalculator() {
         onWikiWeaponChange: setWikiWeaponId,
         weapons: SUPPORT_WEAPON_PRESETS,
         selectedWeapon,
+        charge: {
+          active: Boolean(wikiChargeProfile),
+          seconds: wikiChargeSecondsClamped,
+          maxSeconds: wikiChargeProfile?.maxChargeSeconds ?? 0,
+          maxDamageSeconds: wikiChargeProfile?.maxDamageSeconds ?? 0,
+          safeModeEndSeconds: wikiChargeProfile?.safeModeEndSeconds ?? 0,
+          criticalStartSeconds: wikiChargeProfile?.criticalStartSeconds ?? 0,
+          percent: wikiChargePercent,
+          multiplier: wikiDamageMultiplier,
+          safeHoldPercent: wikiChargeProfile?.safeHoldPercent ?? 0,
+          dangerPercent: wikiChargeProfile?.dangerPercent ?? 90,
+          explosionPercent: wikiChargeProfile?.explosionPercent ?? 100,
+          baseStandardDamage: wikiBaseStandardDamage,
+          baseDurableDamage: wikiBaseDurableDamage,
+          chargedStandardDamage: wikiChargedStandardDamage,
+          chargedDurableDamage: wikiChargedDurableDamage,
+          onChange: handleWikiChargeChange,
+        },
       },
     },
   };
