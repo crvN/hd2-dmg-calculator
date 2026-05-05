@@ -83,7 +83,7 @@ export const SUPPORT_WEAPON_PRESETS: SupportWeaponPreset[] = [
     chargeProfile: {
       maxChargeSeconds: 3,
       maxDamageSeconds: 2.5,
-      damageRampStartSeconds: 0.45,
+      damageRampStartSeconds: 0.5,
       safeModeEndSeconds: 0.45,
       criticalStartSeconds: 2.5,
       safeHoldPercent: 60,
