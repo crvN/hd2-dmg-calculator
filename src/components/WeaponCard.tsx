@@ -1,7 +1,8 @@
-import { EXPLOSIVE_AP } from "../damage";
 import type { SupportWeaponPreset } from "../data/supportWeapons";
+import { EXPLOSIVE_AP } from "../logic/damage";
+import type { WeaponControlModel } from "../logic/weapons";
 import type { DamageMode, EntryMode } from "../types";
-import { RailgunChargeControls, type RailgunChargeModel } from "./RailgunChargeControls";
+import { ChargeControls } from "./ChargeControls";
 
 type ManualWeaponForm = {
   damageMode: DamageMode;
@@ -21,7 +22,8 @@ type WikiWeaponForm = {
   onWikiWeaponChange: (value: string) => void;
   weapons: SupportWeaponPreset[];
   selectedWeapon?: SupportWeaponPreset;
-  charge: RailgunChargeModel;
+  control: WeaponControlModel;
+  onChargeSecondsChange: (seconds: number) => void;
 };
 
 type WeaponCardProps = {
@@ -53,7 +55,12 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
           {wiki.selectedWeapon?.notes && (
             <p className="muted fineprint">{wiki.selectedWeapon.notes}</p>
           )}
-          {wiki.charge.active && <RailgunChargeControls charge={wiki.charge} />}
+          {wiki.control.kind === "charge" && (
+            <ChargeControls
+              model={wiki.control}
+              onSecondsChange={wiki.onChargeSecondsChange}
+            />
+          )}
           <fieldset className="mode wiki-readonly-mode">
             <legend>Damage profile (from preset)</legend>
             <p className="muted fineprint no-margin">

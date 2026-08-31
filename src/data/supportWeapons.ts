@@ -1,5 +1,21 @@
 import type { DamageMode } from "../types";
 
+/** Named damage curve applied while charging; defaults to a linear ramp. */
+export type ChargeCurve = "linear" | "railgun-unsafe";
+
+export type ChargeProfile = {
+  maxChargeSeconds: number;
+  maxDamageSeconds: number;
+  damageRampStartSeconds: number;
+  safeModeEndSeconds: number;
+  criticalStartSeconds: number;
+  safeHoldPercent: number;
+  dangerPercent: number;
+  explosionPercent: number;
+  maxDamageMultiplier: number;
+  curve?: ChargeCurve;
+};
+
 export type SupportWeaponPreset = {
   id: string;
   name: string;
@@ -9,17 +25,7 @@ export type SupportWeaponPreset = {
   damageMode: DamageMode;
   explosiveDamage: number;
   notes?: string;
-  chargeProfile?: {
-    maxChargeSeconds: number;
-    maxDamageSeconds: number;
-    damageRampStartSeconds: number;
-    safeModeEndSeconds: number;
-    criticalStartSeconds: number;
-    safeHoldPercent: number;
-    dangerPercent: number;
-    explosionPercent: number;
-    maxDamageMultiplier: number;
-  };
+  chargeProfile?: ChargeProfile;
 };
 
 export const SUPPORT_WEAPON_PRESETS: SupportWeaponPreset[] = [
@@ -90,6 +96,7 @@ export const SUPPORT_WEAPON_PRESETS: SupportWeaponPreset[] = [
       dangerPercent: 90,
       explosionPercent: 100,
       maxDamageMultiplier: 2.5,
+      curve: "railgun-unsafe",
     },
   },
   {
