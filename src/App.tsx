@@ -7,7 +7,7 @@ import { useShotCalculator } from "./hooks/useShotCalculator";
 import "./App.css";
 
 export default function App() {
-  const { entryMode, setEntryMode, parsed, targetCardProps, weaponCardProps } =
+  const { entryMode, setEntryMode, outcome, targetCardProps, weaponCardProps } =
     useShotCalculator();
 
   return (
@@ -30,7 +30,7 @@ export default function App() {
         <WeaponCard {...weaponCardProps} />
       </div>
 
-      <ResultCard parsed={parsed} />
+      <ResultCard outcome={outcome} />
     </div>
   );
 }
