@@ -11,20 +11,20 @@ export function EntryModeTabs({ entryMode, onChange }: EntryModeTabsProps) {
       <button
         type="button"
         role="tab"
-        aria-selected={entryMode === "manual"}
-        className={`tab ${entryMode === "manual" ? "tab-active" : ""}`}
-        onClick={() => onChange("manual")}
-      >
-        Custom numbers
-      </button>
-      <button
-        type="button"
-        role="tab"
         aria-selected={entryMode === "wiki"}
         className={`tab ${entryMode === "wiki" ? "tab-active" : ""}`}
         onClick={() => onChange("wiki")}
       >
         Wiki presets (WIP)
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={entryMode === "manual"}
+        className={`tab ${entryMode === "manual" ? "tab-active" : ""}`}
+        onClick={() => onChange("manual")}
+      >
+        Custom numbers
       </button>
     </div>
   );

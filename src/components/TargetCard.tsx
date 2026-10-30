@@ -1,6 +1,7 @@
 import type { WikiFactionId } from "../data";
 import type { Enemy } from "../data/types";
 import type { EntryMode } from "../types";
+import { SearchableSelect } from "./SearchableSelect";
 
 type ManualTargetForm = {
   hp: string;
@@ -62,20 +63,15 @@ export function TargetCard({ entryMode, manual, wiki }: TargetCardProps) {
               ))}
             </select>
           </label>
-          <label className="field">
-            <span>Enemy</span>
-            <select
-              className="select"
-              value={wiki.wikiEnemyId}
-              onChange={(e) => wiki.onWikiEnemyChange(e.target.value)}
-            >
-              {wiki.enemies.map((enemy) => (
-                <option key={enemy.id} value={enemy.id}>
-                  {enemy.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Enemy"
+            value={wiki.wikiEnemyId}
+            options={wiki.enemies.map((enemy) => ({
+              id: enemy.id,
+              label: enemy.name,
+            }))}
+            onChange={wiki.onWikiEnemyChange}
+          />
           <label className="field">
             <span>Body part</span>
             <select

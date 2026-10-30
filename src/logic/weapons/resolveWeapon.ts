@@ -1,4 +1,4 @@
-import type { SupportWeaponPreset } from "../../data/supportWeapons";
+import type { CatalogWeapon } from "../../data/catalogWeapons";
 import type { DamageMode, WeaponShot } from "../../types";
 import { toNumber } from "../shared/numbers";
 
@@ -22,7 +22,7 @@ export function resolveManualWeapon(fields: ManualWeaponFields): WeaponShot {
 }
 
 export function resolveWikiWeapon(
-  weapon: SupportWeaponPreset | undefined,
+  weapon: CatalogWeapon | undefined,
   damageMultiplier: number,
 ): WeaponShot {
   return {

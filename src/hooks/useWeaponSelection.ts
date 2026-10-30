@@ -1,16 +1,20 @@
 import { useMemo, useState } from "react";
-import { SUPPORT_WEAPON_PRESETS } from "../data/supportWeapons";
 import {
   DEFAULT_WEAPON_TUNING,
+  groupWeaponsByKind,
   resolveManualWeapon,
   resolveWikiWeapon,
   weaponBehaviorFor,
   type WeaponTuning,
 } from "../logic/weapons";
 import type { DamageMode, EntryMode, WeaponShot } from "../types";
+import { useWeaponCatalog } from "./useWeaponCatalog";
 
 export function useWeaponSelection(entryMode: EntryMode) {
-  const [weaponId, setWeaponId] = useState(SUPPORT_WEAPON_PRESETS[0]?.id ?? "");
+  const { weapons, dataVersion, status } = useWeaponCatalog();
+
+  const [groupKind, setGroupKind] = useState("");
+  const [weaponId, setWeaponId] = useState("");
   const [tuning, setTuning] = useState<WeaponTuning>(DEFAULT_WEAPON_TUNING);
 
   const [standardDmg, setStandardDmg] = useState("95");
@@ -19,9 +23,18 @@ export function useWeaponSelection(entryMode: EntryMode) {
   const [explosiveDmg, setExplosiveDmg] = useState("150");
   const [damageMode, setDamageMode] = useState<DamageMode>("ballistic");
 
+  const weaponGroups = useMemo(() => groupWeaponsByKind(weapons), [weapons]);
+
+  const selectedGroup = useMemo(
+    () => weaponGroups.find((group) => group.kind === groupKind) ?? weaponGroups[0],
+    [weaponGroups, groupKind],
+  );
+
   const selectedWeapon = useMemo(
-    () => SUPPORT_WEAPON_PRESETS.find((weapon) => weapon.id === weaponId),
-    [weaponId],
+    () =>
+      selectedGroup?.weapons.find((weapon) => weapon.id === weaponId) ??
+      selectedGroup?.weapons[0],
+    [selectedGroup, weaponId],
   );
 
   const behavior = useMemo(
@@ -47,12 +60,19 @@ export function useWeaponSelection(entryMode: EntryMode) {
     setTuning(DEFAULT_WEAPON_TUNING);
   }
 
+  function handleGroupChange(kind: string) {
+    setGroupKind(kind);
+    handleWeaponChange("");
+  }
+
   function handleChargeSecondsChange(seconds: number) {
     setTuning(behavior.clampTuning({ chargeSeconds: seconds }));
   }
 
   return {
     shot,
+    catalogStatus: status,
+    catalogDataVersion: dataVersion,
     weaponCardProps: {
       entryMode,
       manual: {
@@ -68,9 +88,12 @@ export function useWeaponSelection(entryMode: EntryMode) {
         onExplosiveDmgChange: setExplosiveDmg,
       },
       wiki: {
-        wikiWeaponId: weaponId,
+        weaponGroups,
+        wikiGroupKind: selectedGroup?.kind ?? "",
+        onWikiGroupChange: handleGroupChange,
+        groupWeapons: selectedGroup?.weapons ?? [],
+        wikiWeaponId: selectedWeapon?.id ?? "",
         onWikiWeaponChange: handleWeaponChange,
-        weapons: SUPPORT_WEAPON_PRESETS,
         selectedWeapon,
         control: behavior.controlModel(activeTuning),
         onChargeSecondsChange: handleChargeSecondsChange,

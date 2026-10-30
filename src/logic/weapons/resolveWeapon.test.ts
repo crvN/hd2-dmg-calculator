@@ -1,8 +1,9 @@
-import type { SupportWeaponPreset } from "../../data/supportWeapons";
+import type { CatalogWeapon } from "../../data/catalogWeapons";
 import { resolveManualWeapon, resolveWikiWeapon } from "./resolveWeapon";
 
-const weapon: SupportWeaponPreset = {
+const weapon: CatalogWeapon = {
   id: "test",
+  kind: "support_weapon",
   name: "Test Weapon",
   standardDamage: 200,
   durableDamage: 100,

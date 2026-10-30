@@ -9,6 +9,12 @@ Small React (Vite) app that estimates **how many hits** it takes to destroy a bo
 
 This is a fan helper; always double-check numbers against the wiki and in-game behavior.
 
+## Data sources
+
+- **Stratagem and primary weapons:** loaded in the browser from the [Helldivers 2 Data API](https://github.com/DionathaGoulart/Helldivers-api) by DionathaGoulart, based on [The Helldivers Wiki](https://helldivers.wiki.gg), under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Backpacks and utility strikes (smoke, EMS) are left out. Mapped weapons are cached in `localStorage` for one day. If a refresh fails, the last saved data stays in use. The data is for non-commercial use. Weapon images are loaded from the API and belong to the game, not the CC license.
+- **Enemies:** the API has no enemy data, so body parts are a curated snapshot in `src/data/`.
+- **Railgun charge timings and a few ammo labels:** not in the API, so they live in `WEAPON_OVERRIDES` in `src/data/catalogWeapons.ts`.
+
 ## Local dev
 
 ```bash

@@ -1,7 +1,7 @@
 import type {
   ChargeProfile,
-  SupportWeaponPreset,
-} from "../../data/supportWeapons";
+  CatalogWeapon,
+} from "../../data/catalogWeapons";
 import { roundTo2 } from "../shared/numbers";
 import {
   chargeDamageMultiplier,
@@ -51,7 +51,7 @@ const PLAIN_WEAPON: WeaponBehavior = {
 };
 
 function chargedWeaponBehavior(
-  weapon: SupportWeaponPreset,
+  weapon: CatalogWeapon,
   profile: ChargeProfile,
 ): WeaponBehavior {
   return {
@@ -88,7 +88,7 @@ function chargedWeaponBehavior(
 }
 
 export function weaponBehaviorFor(
-  weapon: SupportWeaponPreset | undefined,
+  weapon: CatalogWeapon | undefined,
 ): WeaponBehavior {
   if (weapon?.chargeProfile) {
     return chargedWeaponBehavior(weapon, weapon.chargeProfile);

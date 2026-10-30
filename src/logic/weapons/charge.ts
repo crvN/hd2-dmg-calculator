@@ -1,4 +1,4 @@
-import type { ChargeProfile } from "../../data/supportWeapons";
+import type { ChargeProfile } from "../../data/catalogWeapons";
 
 type ChargeCurveFn = (profile: ChargeProfile, chargeSeconds: number) => number;
 
