@@ -1,9 +1,10 @@
 import { clampPercent } from "../shared/clamp";
 import { armorDamageMultiplier } from "./armor";
+import { floorDamage } from "./rounding";
 
 /**
- * Mixed standard + durable damage before armor (round down once).
- * Standard × (1 − Durable%) + Durable × Durable% → floor.
+ * Mixed standard + durable damage before armor, not yet rounded.
+ * Standard × (1 − Durable%) + Durable × Durable%.
  */
 export function mixedBallisticBaseDamage(
   standardDamage: number,
@@ -11,11 +12,10 @@ export function mixedBallisticBaseDamage(
   durablePercent: number,
 ): number {
   const p = clampPercent(durablePercent) / 100;
-  const raw = standardDamage * (1 - p) + durableDamage * p;
-  return Math.floor(raw);
+  return standardDamage * (1 - p) + durableDamage * p;
 }
 
-/** Floors after mixing, then again after the armor multiplier. */
+/** Rounds once, after the armor multiplier. */
 export function ballisticDamageAfterArmor(
   standardDamage: number,
   durableDamage: number,
@@ -28,5 +28,5 @@ export function ballisticDamageAfterArmor(
     durableDamage,
     durablePercent,
   );
-  return Math.floor(mixed * armorDamageMultiplier(penetration, armor));
+  return floorDamage(mixed * armorDamageMultiplier(penetration, armor));
 }

@@ -1,4 +1,3 @@
-import { EXPLOSIVE_AP } from '../logic/damage'
 import type { ShotOutcome } from '../types'
 
 type ResultCardProps = {
@@ -11,7 +10,11 @@ export function ResultCard({ outcome }: ResultCardProps) {
       <h2>Result</h2>
       <div className="result-main">
         {outcome.shotsToKill === null ? (
-          <p className="warn">No damage per shot (ricochet or zero inputs). Cannot reach HP.</p>
+          <p className="warn">
+            {outcome.totalDamage > 0
+              ? 'This part cannot be destroyed.'
+              : 'No damage per shot (ricochet or zero inputs). Cannot reach HP.'}
+          </p>
         ) : (
           <p className="shots">
             Shots required: <strong>{outcome.shotsToKill}</strong>
@@ -34,7 +37,7 @@ export function ResultCard({ outcome }: ResultCardProps) {
             <dd>
               {outcome.explosiveDamage}{' '}
               <span className={`tag tag-${outcome.explosiveMarker}`}>{outcome.explosiveMarker}</span>
-              <span className="muted"> (AP {EXPLOSIVE_AP})</span>
+              <span className="muted"> (AP {outcome.explosivePenetration})</span>
             </dd>
           </>
         )}
@@ -42,7 +45,7 @@ export function ResultCard({ outcome }: ResultCardProps) {
         <dd>{outcome.totalDamage}</dd>
       </dl>
       <p className="muted fineprint">
-        Ballistic: floor( floor(Std×(1−D%) + Dur×D%) × armor mult ). Explosive: floor(Exp × armor mult × (1−resist)).
+        Ballistic: floor( (Std×(1−D%) + Dur×D%) × armor mult ). Explosive: floor(Exp × armor mult × (1−resist)).
         Armor mult: AP &gt; armor → 100%, AP = armor → 65%, AP &lt; armor → 0%.
       </p>
     </section>

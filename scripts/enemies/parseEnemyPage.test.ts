@@ -35,6 +35,96 @@ const warriorMain = row([
   "0%",
 ]);
 
+function thumbnail(file: string, version: string): string {
+  return `<a><img src="/images/thumb/${file}/200px-${file}?${version}" /></a>`;
+}
+
+function locationTabs(views: [string, string, string][]): string {
+  const tabs = views
+    .map(([view]) => `<a class="tabber__tab" id="${view}-0-label">${view}</a>`)
+    .join("");
+  const panels = views
+    .map(
+      ([view, file, version]) =>
+        `<article class="tabber__panel" aria-labelledby="${view}-0-label">${thumbnail(file, version)}</article>`,
+    )
+    .join("");
+  return `<div class="tabber"><nav>${tabs}</nav><section>${panels}</section></div>`;
+}
+
+function rowWithLocation(label: string, location: string): string {
+  return row([
+    label,
+    "100",
+    armorCell(1, "Very Light"),
+    location,
+    "0%",
+    "100%",
+    "No",
+    "None",
+    "Yes",
+    "0%",
+  ]);
+}
+
+function partRowWithArmor(label: string, armor: string): string {
+  return row([
+    label,
+    "100",
+    armor,
+    "Front",
+    "0%",
+    "100%",
+    "No",
+    "None",
+    "Yes",
+    "0%",
+  ]);
+}
+
+function partRow(label: string, health: string): string {
+  return row([
+    label,
+    health,
+    armorCell(1, "Very Light"),
+    "Front",
+    "0%",
+    "100%",
+    "No",
+    "None",
+    "Yes",
+    "0%",
+  ]);
+}
+
+function sharedPart(label: string, health: string): string {
+  return row([
+    label,
+    health,
+    armorCell(0, "Unarmored"),
+    "Front",
+    "70%",
+    "100%",
+    "Yes",
+    "None",
+    "Yes",
+    "50%",
+  ]);
+}
+
+function tabbedPage(tabs: [string, string[]][]): string {
+  const labels = tabs
+    .map(([tab], index) => `<a class="tabber__tab" id="tab-${index}-label">${tab}</a>`)
+    .join("");
+  const panels = tabs
+    .map(
+      ([, rows], index) =>
+        `<article class="tabber__panel" aria-labelledby="tab-${index}-label"><table class="wikitable"><tbody>${HEADER}${rows.join("")}</tbody></table></article>`,
+    )
+    .join("");
+  return `<html><body><h1 id="firstHeading">Harvester</h1><div id="mw-content-text"><div class="tabber"><nav>${labels}</nav><section>${panels}</section></div></div></body></html>`;
+}
+
 describe("parseEnemyPage", () => {
   it("reads a part's stats and its health at each difficulty", () => {
     const { name, parts, issues } = parseEnemyPage(page([warriorMain]));
@@ -45,13 +135,16 @@ describe("parseEnemyPage", () => {
       {
         id: "main",
         label: "Main",
+        section: null,
         count: 1,
+        images: [],
         hitPointsByDifficulty: [
           { fromDifficulty: 1, hitPoints: 250 },
           { fromDifficulty: 4, hitPoints: 325 },
         ],
-        sharesMainHealth: false,
-        armorRating: 1,
+        sharesHealthWith: null,
+        hasInfiniteHealth: false,
+        armorByDifficulty: [{ fromDifficulty: 1, armorRating: 1 }],
         durablePercent: 20,
         explosiveResistPercent: 0,
         percentToMain: null,
@@ -119,28 +212,290 @@ describe("parseEnemyPage", () => {
 
   it("marks a part whose health is the main pool", () => {
     const { parts, issues } = parseEnemyPage(
+      page([warriorMain, sharedPart("Inner Flesh", "Main")]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts[1]).toMatchObject({
+      hitPointsByDifficulty: [],
+      sharesHealthWith: "Main",
+      armorByDifficulty: [{ fromDifficulty: 1, armorRating: 0 }],
+    });
+  });
+
+  it("reads armor that rises at a difficulty, as on a Bile Spewer", () => {
+    const { parts, issues } = parseEnemyPage(
       page([
         row([
-          "Inner Flesh",
           "Main",
-          armorCell(0, "Unarmored"),
+          "750",
+          `${armorCell(2, "Light")}<br />${armorCell(3, "Medium")} at <a><img alt="Extreme Difficulty Icon.svg" /></a>`,
           "Front",
-          "70%",
-          "100%",
-          "Yes",
+          "50%",
+          "-",
+          "-",
           "None",
           "Yes",
-          "50%",
+          "0%",
         ]),
       ]),
     );
 
     expect(issues).toEqual([]);
+    expect(parts[0].armorByDifficulty).toEqual([
+      { fromDifficulty: 1, armorRating: 2 },
+      { fromDifficulty: 6, armorRating: 3 },
+    ]);
+  });
+
+  it("reports armor tiers without a difficulty to start from", () => {
+    const { issues } = parseEnemyPage(
+      page([
+        row([
+          "Main",
+          "750",
+          `${armorCell(2, "Light")}<br />${armorCell(3, "Medium")}`,
+          "Front",
+          "50%",
+          "-",
+          "-",
+          "None",
+          "Yes",
+          "0%",
+        ]),
+      ]),
+    );
+
+    expect(issues[0]).toContain("Main: unreadable armor tiers");
+  });
+
+  it("reports an armor name it does not recognise even with an icon present", () => {
+    const { issues } = parseEnemyPage(
+      page([partRowWithArmor("Head", armorCell(2, "Mystery"))]),
+    );
+
+    expect(issues).toEqual(['Head: unreadable armor "[[]] Mystery"']);
+  });
+
+  it("reports a dash in a stat every part must have", () => {
+    const { issues } = parseEnemyPage(
+      page([
+        row([
+          "Head",
+          "100",
+          armorCell(1, "Very Light"),
+          "Front",
+          "-",
+          "100%",
+          "No",
+          "None",
+          "Yes",
+          "-",
+        ]),
+      ]),
+    );
+
+    expect(issues).toEqual([
+      "Head: no durable listed",
+      "Head: no ExDR listed",
+    ]);
+  });
+
+  it("links a tank part to the named health pool it draws from", () => {
+    const { parts, issues } = parseEnemyPage(
+      page([
+        partRow("Hull<br />Main", "4,000"),
+        sharedPart("Hull Front", "Main<br />(Hull)"),
+      ]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts[0].label).toBe("Hull Main");
+    expect(parts[1].sharesHealthWith).toBe("Hull Main");
+  });
+
+  it("reports a shared health pool that no part provides", () => {
+    const { issues } = parseEnemyPage(
+      page([sharedPart("Turret Front", "Main<br />(Turret)")]),
+    );
+
+    expect(issues).toEqual([
+      'Turret Front: no part named "Turret Main"',
+    ]);
+  });
+
+  it("marks a part that cannot be destroyed", () => {
+    const { parts, issues } = parseEnemyPage(page([partRow("Shield", "Infinite")]));
+
+    expect(issues).toEqual([]);
     expect(parts[0]).toMatchObject({
       hitPointsByDifficulty: [],
-      sharesMainHealth: true,
-      armorRating: 0,
+      hasInfiniteHealth: true,
     });
+  });
+
+  it("skips a part with no health listed and says so", () => {
+    const { parts, warnings, issues } = parseEnemyPage(
+      page([warriorMain, partRow("Hatches (2)", "-")]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts.map((part) => part.label)).toEqual(["Main"]);
+    expect(warnings).toEqual(["Hatches (2): no health listed, so skipped"]);
+  });
+
+  it("warns when the constitution column holds a Fatal-style value", () => {
+    const { parts, warnings, issues } = parseEnemyPage(
+      page([
+        row([
+          "Legs",
+          "80",
+          armorCell(0, "Unarmored"),
+          "Front",
+          "0%",
+          "30%",
+          "Yes",
+          "No<br />(Downs)",
+          "Yes",
+          "100%",
+        ]),
+      ]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts[0]).toMatchObject({ constitution: null, downsEnemy: true });
+    expect(warnings).toEqual(['Legs: constitution column holds "No (Downs)"']);
+  });
+
+  it.each(["100 [50/s]", "[10/s]", "50,000 [-10,000/s]"])(
+    "accepts the constitution format %s",
+    (constitution) => {
+      const { parts, warnings } = parseEnemyPage(
+        page([
+          row([
+            "Main",
+            "100",
+            armorCell(0, "Unarmored"),
+            "Front",
+            "0%",
+            "-",
+            "-",
+            constitution,
+            "Yes",
+            "0%",
+          ]),
+        ]),
+      );
+
+      expect(warnings).toEqual([]);
+      expect(parts[0].constitution).toBe(constitution);
+    },
+  );
+
+  it("reads a count that sits in the middle of a part name", () => {
+    const { parts } = parseEnemyPage(
+      page([partRow("Side Circuits (2)<br />(Broken Side Armor)", "1,200")]),
+    );
+
+    expect(parts[0]).toMatchObject({
+      label: "Side Circuits (Broken Side Armor)",
+      count: 2,
+    });
+  });
+
+  it("keeps each tab's table as a named section with its own part ids", () => {
+    const { parts, issues } = parseEnemyPage(
+      tabbedPage([
+        ["Intact", [warriorMain, partRow("Head", "100")]],
+        ["Armor Broken", [warriorMain, partRow("Internals (2)", "800")]],
+      ]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts.map((part) => [part.id, part.section])).toEqual([
+      ["intact-main", "Intact"],
+      ["intact-head", "Intact"],
+      ["armor-broken-main", "Armor Broken"],
+      ["armor-broken-internals", "Armor Broken"],
+    ]);
+  });
+
+  it("reads one picture per angle from the location tabs", () => {
+    const { parts, warnings } = parseEnemyPage(
+      page([
+        rowWithLocation(
+          "Head",
+          locationTabs([
+            ["Front", "Warrior_Head_Front.png", "aa11"],
+            ["Side", "Warrior_Head_Side.png", "bb22"],
+          ]),
+        ),
+      ]),
+    );
+
+    expect(warnings).toEqual([]);
+    expect(parts[0].images).toEqual([
+      { view: "Front", file: "Warrior_Head_Front.png", version: "aa11" },
+      { view: "Side", file: "Warrior_Head_Side.png", version: "bb22" },
+    ]);
+  });
+
+  it("reads a lone picture with no angle", () => {
+    const { parts } = parseEnemyPage(
+      page([rowWithLocation("Main", thumbnail("Warrior_Main.png", "cc33"))]),
+    );
+
+    expect(parts[0].images).toEqual([
+      { view: null, file: "Warrior_Main.png", version: "cc33" },
+    ]);
+  });
+
+  it("warns about an unusual image address without blocking the stats", () => {
+    const { parts, issues, warnings } = parseEnemyPage(
+      page([rowWithLocation("Main", `<img src="/images/Odd.svg" />`)]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts[0].images).toEqual([]);
+    expect(warnings).toEqual([
+      'Main: unexpected image address "/images/Odd.svg"',
+    ]);
+  });
+
+  it("merges the pictures of tabs that repeat the same stats", () => {
+    const { parts, issues } = parseEnemyPage(
+      tabbedPage([
+        [
+          "Top & Side",
+          [rowWithLocation("Main", thumbnail("Lord_Top.png", "aa11"))],
+        ],
+        [
+          "Bottom & Face",
+          [rowWithLocation("Main", thumbnail("Lord_Bottom.png", "bb22"))],
+        ],
+      ]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts).toHaveLength(1);
+    expect(parts[0].section).toBeNull();
+    expect(parts[0].images.map((image) => image.file)).toEqual([
+      "Lord_Top.png",
+      "Lord_Bottom.png",
+    ]);
+  });
+
+  it("treats tabs that repeat the same table as one table", () => {
+    const { parts, issues } = parseEnemyPage(
+      tabbedPage([
+        ["Top & Side", [warriorMain]],
+        ["Bottom & Face", [warriorMain]],
+      ]),
+    );
+
+    expect(issues).toEqual([]);
+    expect(parts).toHaveLength(1);
+    expect(parts[0]).toMatchObject({ id: "main", section: null });
   });
 
   it.each([

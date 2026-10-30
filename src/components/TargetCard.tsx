@@ -1,7 +1,10 @@
 import type { WikiFactionId } from "../data";
-import type { Enemy } from "../data/types";
-import type { EntryMode } from "../types";
-import { SearchableSelect } from "./SearchableSelect";
+import type { Difficulty } from "../data/difficulties";
+import type { Enemy, EnemyBodyPart } from "../data/types";
+import type { PartImageModel } from "../logic/targets";
+import type { EntryMode, TargetStats } from "../types";
+import { PartImages } from "./PartImages";
+import { SearchableSelect, type SearchableSelectOption } from "./SearchableSelect";
 
 type ManualTargetForm = {
   hp: string;
@@ -23,9 +26,17 @@ type WikiTargetForm = {
   wikiFactionId: WikiFactionId;
   wikiFactions: readonly WikiFactionOption[];
   onWikiFactionChange: (value: WikiFactionId) => void;
+  difficulties: Difficulty[];
+  wikiDifficulty: number;
+  onWikiDifficultyChange: (level: number) => void;
   wikiEnemyId: string;
   wikiPartId: string;
   selectedEnemy?: Enemy;
+  selectedPart?: EnemyBodyPart;
+  partOptions: SearchableSelectOption[];
+  partStats: TargetStats;
+  partHitPointsLabel: string;
+  partImages: PartImageModel[];
   enemies: Enemy[];
   onWikiEnemyChange: (value: string) => void;
   onWikiPartChange: (value: string) => void;
@@ -38,10 +49,6 @@ type TargetCardProps = {
 };
 
 export function TargetCard({ entryMode, manual, wiki }: TargetCardProps) {
-  const selectedPart = wiki.selectedEnemy?.parts.find(
-    (p) => p.id === wiki.wikiPartId,
-  );
-
   return (
     <section className="card">
       <h2>Target (body part)</h2>
@@ -63,6 +70,22 @@ export function TargetCard({ entryMode, manual, wiki }: TargetCardProps) {
               ))}
             </select>
           </label>
+          <label className="field">
+            <span>Difficulty</span>
+            <select
+              className="select"
+              value={wiki.wikiDifficulty}
+              onChange={(e) =>
+                wiki.onWikiDifficultyChange(Number(e.target.value))
+              }
+            >
+              {wiki.difficulties.map((difficulty) => (
+                <option key={difficulty.level} value={difficulty.level}>
+                  {difficulty.level} – {difficulty.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <SearchableSelect
             label="Enemy"
             value={wiki.wikiEnemyId}
@@ -79,25 +102,30 @@ export function TargetCard({ entryMode, manual, wiki }: TargetCardProps) {
               value={wiki.wikiPartId}
               onChange={(e) => wiki.onWikiPartChange(e.target.value)}
             >
-              {(wiki.selectedEnemy?.parts ?? []).map((part) => (
+              {wiki.partOptions.map((part) => (
                 <option key={part.id} value={part.id}>
                   {part.label}
                 </option>
               ))}
             </select>
           </label>
-          {selectedPart && (
+          {wiki.selectedPart && (
             <dl className="part-stats">
               <dt>HP</dt>
-              <dd>{selectedPart.hp}</dd>
+              <dd>
+                {wiki.partHitPointsLabel}
+                {wiki.selectedPart.sharesHealthWith &&
+                  ` (shared with ${wiki.selectedPart.sharesHealthWith})`}
+              </dd>
               <dt>Armor (AV)</dt>
-              <dd>{selectedPart.armorRating}</dd>
+              <dd>{wiki.partStats.armorRating}</dd>
               <dt>Durable %</dt>
-              <dd>{selectedPart.durablePercent}%</dd>
+              <dd>{wiki.partStats.durablePercent}%</dd>
               <dt>Explosive resist</dt>
-              <dd>{selectedPart.explosiveResistPercent}%</dd>
+              <dd>{wiki.partStats.explosiveResistPercent}%</dd>
             </dl>
           )}
+          <PartImages images={wiki.partImages} />
           {wiki.selectedEnemy && (
             <p className="muted fineprint wiki-enemy-link">
               <a

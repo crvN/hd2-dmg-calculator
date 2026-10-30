@@ -4,7 +4,14 @@ import {
   WIKI_FACTIONS,
   type WikiFactionId,
 } from "../data";
-import { resolveManualTarget, resolveWikiTarget } from "../logic/targets";
+import { DEFAULT_DIFFICULTY_LEVEL, DIFFICULTIES } from "../data/difficulties";
+import {
+  formatHitPoints,
+  partImageModels,
+  partOptionLabel,
+  resolveManualTarget,
+  resolveWikiTarget,
+} from "../logic/targets";
 import type { EntryMode, TargetStats } from "../types";
 
 const INITIAL_FACTION: WikiFactionId = "terminids";
@@ -15,6 +22,7 @@ export function useTargetSelection(entryMode: EntryMode) {
   const [factionId, setFactionId] = useState<WikiFactionId>(INITIAL_FACTION);
   const [enemyId, setEnemyId] = useState(initialEnemies[0]?.id ?? "");
   const [partId, setPartId] = useState(initialEnemies[0]?.parts[0]?.id ?? "");
+  const [difficulty, setDifficulty] = useState(DEFAULT_DIFFICULTY_LEVEL);
 
   const [hp, setHp] = useState("100");
   const [durablePct, setDurablePct] = useState("30");
@@ -38,9 +46,32 @@ export function useTargetSelection(entryMode: EntryMode) {
     [selectedEnemy, partId],
   );
 
+  const partOptions = useMemo(
+    () =>
+      (selectedEnemy?.parts ?? []).map((part) => ({
+        id: part.id,
+        label: partOptionLabel(part),
+      })),
+    [selectedEnemy],
+  );
+
+  const partImages = useMemo(
+    () =>
+      selectedEnemy && selectedPart
+        ? partImageModels(selectedPart, selectedEnemy.name)
+        : [],
+    [selectedEnemy, selectedPart],
+  );
+
+  const wikiStats = resolveWikiTarget(
+    selectedPart,
+    selectedEnemy?.parts ?? [],
+    difficulty,
+  );
+
   const stats: TargetStats =
     entryMode === "wiki"
-      ? resolveWikiTarget(selectedPart)
+      ? wikiStats
       : resolveManualTarget({
           hitPoints: hp,
           durablePercent: durablePct,
@@ -80,9 +111,17 @@ export function useTargetSelection(entryMode: EntryMode) {
         wikiFactionId: factionId,
         wikiFactions: WIKI_FACTIONS,
         onWikiFactionChange: handleFactionChange,
+        difficulties: DIFFICULTIES,
+        wikiDifficulty: difficulty,
+        onWikiDifficultyChange: setDifficulty,
         wikiEnemyId: enemyId,
-        wikiPartId: partId,
+        wikiPartId: selectedPart?.id ?? "",
         selectedEnemy,
+        selectedPart,
+        partOptions,
+        partStats: wikiStats,
+        partHitPointsLabel: formatHitPoints(wikiStats.hitPoints),
+        partImages,
         enemies,
         onWikiEnemyChange: handleEnemyChange,
         onWikiPartChange: setPartId,

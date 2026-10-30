@@ -272,6 +272,35 @@
   font-variant-numeric: tabular-nums;
 }
 
+.part-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin: 0 0 0.65rem;
+}
+
+.part-image {
+  margin: 0;
+}
+
+/* The wiki's pictures are 3:2, and reserving the shape stops the card jumping as they load. */
+.part-image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: contain;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.part-image figcaption {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
 .header {
   margin-bottom: 1.5rem;
 }

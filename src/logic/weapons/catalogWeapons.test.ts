@@ -87,6 +87,30 @@ describe("stratagemWeaponsFrom", () => {
     expect(weapon.explosiveDamage).toBe(150);
   });
 
+  it("gives an explosion AP 3 unless its attack has an override", () => {
+    const [heat, he] = stratagemWeaponsFrom([
+      stratagem("gr-8-recoilless-rifle", [
+        attack("GR-8 P", "projectile", 3200, 3200, "Ballistic", "anti_tank_ii"),
+        attack("GR-8 P IE", "explosion", 150, 150, "Explosion"),
+        attack("GR-8 P1", "projectile", 750, 750, "Ballistic", "anti_tank_i"),
+        attack("GR-8 P1 IE", "explosion", 800, 800, "Explosion"),
+      ]),
+    ]);
+
+    expect(heat.explosivePenetration).toBe(3);
+    expect(he.explosivePenetration).toBe(4);
+  });
+
+  it("reads a standalone explosion's AP from its override", () => {
+    const [weapon] = stratagemWeaponsFrom([
+      stratagem("md-17-anti-tank-mines", [
+        attack("ANTI-TANK MINES E", "explosion", 2000, 2000, "Explosion"),
+      ]),
+    ]);
+
+    expect(weapon.explosivePenetration).toBe(5);
+  });
+
   it("treats a zero-damage projectile with an impact explosion as explosive only", () => {
     const [weapon] = stratagemWeaponsFrom([
       stratagem("gl", [

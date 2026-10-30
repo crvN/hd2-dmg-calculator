@@ -6,7 +6,15 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
-      { tsconfig: { module: 'commonjs', types: ['jest', 'node'] } },
+      {
+        tsconfig: {
+          module: 'commonjs',
+          target: 'es2023',
+          types: ['jest', 'node'],
+          esModuleInterop: true,
+          resolveJsonModule: true,
+        },
+      },
     ],
   },
 }

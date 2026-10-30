@@ -21,6 +21,7 @@ const catalog: WeaponCatalog = {
       penetration: 3,
       damageMode: "ballistic",
       explosiveDamage: 0,
+      explosivePenetration: 3,
     },
   ],
 };

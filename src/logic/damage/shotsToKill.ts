@@ -4,6 +4,6 @@ export function shotsToKill(
   damagePerShot: number,
 ): number | null {
   if (hp <= 0) return 0;
-  if (damagePerShot <= 0) return null;
+  if (damagePerShot <= 0 || !Number.isFinite(hp)) return null;
   return Math.ceil(hp / damagePerShot);
 }
