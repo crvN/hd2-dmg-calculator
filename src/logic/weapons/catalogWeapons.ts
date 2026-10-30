@@ -6,6 +6,7 @@ import {
   type ApiWeapon,
 } from "../../data/catalogApi";
 import {
+  DEFAULT_EXPLOSIVE_PENETRATION,
   EXCLUDED_STRATAGEM_IDS,
   EXCLUDED_STRATAGEM_KINDS,
   WEAPON_OVERRIDES,
@@ -100,10 +101,21 @@ function attackNotes(attack: ApiAttack): string[] {
   return notes;
 }
 
+function explosivePenetrationFor(
+  explosion: ApiAttack | undefined,
+  override: WeaponOverride | undefined,
+): number {
+  return (
+    override?.explosivePenetration?.[explosion?.name ?? ""] ??
+    DEFAULT_EXPLOSIVE_PENETRATION
+  );
+}
+
 function directAttackWeapon(
   armament: ApiArmament,
   attack: ApiAttack,
   explosion: ApiAttack | undefined,
+  override: WeaponOverride | undefined,
 ): CatalogWeapon {
   // The API carries float noise from the game files, such as 599.999994 for 600.
   const standardDamage = roundTo2(attack.damage?.standard ?? 0);
@@ -118,6 +130,7 @@ function directAttackWeapon(
     penetration: penetrationRating(attack.penetration?.direct),
     damageMode: damageModeFor(standardDamage + durableDamage, explosiveDamage),
     explosiveDamage,
+    explosivePenetration: explosivePenetrationFor(explosion, override),
     notes: attackNotes(attack).join(" "),
   };
 }
@@ -125,6 +138,7 @@ function directAttackWeapon(
 function explosionWeapon(
   armament: ApiArmament,
   attack: ApiAttack,
+  override: WeaponOverride | undefined,
 ): CatalogWeapon {
   return {
     id: `${armament.id}/${attack.name}`,
@@ -135,6 +149,7 @@ function explosionWeapon(
     penetration: 0,
     damageMode: "explosive",
     explosiveDamage: roundTo2(attack.damage?.standard ?? 0),
+    explosivePenetration: explosivePenetrationFor(attack, override),
   };
 }
 
@@ -148,7 +163,7 @@ function dealsDamage(weapon: CatalogWeapon): boolean {
 function withoutDuplicateStats(weapons: CatalogWeapon[]): CatalogWeapon[] {
   const seenStats = new Set<string>();
   return weapons.filter((weapon) => {
-    const stats = `${weapon.standardDamage}|${weapon.durableDamage}|${weapon.penetration}|${weapon.explosiveDamage}`;
+    const stats = `${weapon.standardDamage}|${weapon.durableDamage}|${weapon.penetration}|${weapon.explosiveDamage}|${weapon.explosivePenetration}`;
     if (seenStats.has(stats)) return false;
     seenStats.add(stats);
     return true;
@@ -169,6 +184,7 @@ function usableAttacks(
 function attackVariants(
   armament: ApiArmament,
   attacks: ApiAttack[],
+  override: WeaponOverride | undefined,
 ): CatalogWeapon[] {
   const explosions = attacks.filter(isExplosion);
   const direct = attacks.filter(isDirectAttack);
@@ -182,9 +198,10 @@ function attackVariants(
         armament,
         attack,
         explosions.find((e) => e.name === impactExplosionName(attack)),
+        override,
       ),
     ),
-    ...standalone.map((attack) => explosionWeapon(armament, attack)),
+    ...standalone.map((attack) => explosionWeapon(armament, attack, override)),
   ];
 }
 
@@ -196,8 +213,7 @@ function variantName(
 ): string {
   if (variantCount === 1) return armament.name;
   const label =
-    override?.attackLabels?.[variant.name] ??
-    variant.name.replace(/_dm$/, "");
+    override?.attackLabels?.[variant.name] ?? variant.name.replace(/_dm$/, "");
   return `${armament.name} (${label})`;
 }
 
@@ -218,9 +234,11 @@ function isOffensiveStratagem(stratagem: ApiStratagem): boolean {
 function weaponsFromArmament(armament: ApiArmament): CatalogWeapon[] {
   const override = WEAPON_OVERRIDES[armament.id];
   const variants = withoutDuplicateStats(
-    attackVariants(armament, usableAttacks(armament, override)).filter(
-      dealsDamage,
-    ),
+    attackVariants(
+      armament,
+      usableAttacks(armament, override),
+      override,
+    ).filter(dealsDamage),
   );
   return variants.map((variant) => ({
     ...variant,

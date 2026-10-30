@@ -10,6 +10,7 @@ const baseInput: ShotInput = {
   durableDamage: 50,
   penetration: 3,
   explosiveDamage: 200,
+  explosivePenetration: 3,
   damageMode: "ballistic",
 };
 
@@ -39,6 +40,19 @@ describe("calculateShot", () => {
     const outcome = calculateShot({ ...baseInput, armorRating: 3 });
     expect(outcome.ballisticMarker).toBe("white");
     expect(outcome.explosiveMarker).toBe("white");
+  });
+
+  it("judges the explosion by its own AP, not the projectile's", () => {
+    const outcome = calculateShot({
+      ...baseInput,
+      damageMode: "combined",
+      armorRating: 4,
+      explosivePenetration: 6,
+    });
+    expect(outcome.ballisticMarker).toBe("ricochet");
+    expect(outcome.explosiveMarker).toBe("red");
+    expect(outcome.explosivePenetration).toBe(6);
+    expect(outcome.shotsToKill).toBe(5);
   });
 
   it("returns null shots when the shot ricochets", () => {

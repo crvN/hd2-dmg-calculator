@@ -1,8 +1,10 @@
 /**
  * Builds the enemy data file from The Helldivers Wiki (CC BY-NC-SA 4.0).
  *
- *   npm run sync:enemies -- --only Warrior,Bile_Titan --out enemies.json
+ *   npm run sync:enemies
+ *   npm run sync:enemies -- --only Warrior,Bile_Titan --out trial.json
  *
+ * Pages are cached between runs; pass --refresh to fetch them again for new data.
  * Reads only /wiki/ pages: the wiki's robots.txt disallows api.php and ?action= URLs.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -23,11 +25,18 @@ const MIN_DELAY_MS = 3000;
 const MAX_JITTER_MS = 1000;
 const REVIEWED_CONTENT_SIGNAL = "search=yes,ai-train=no,use=reference";
 const FACTIONS_PAGE = "Factions";
+/** The player: its health and resistances depend on the armor being worn. */
+const EXCLUDED_PAGES = ["Helldiver"];
+/** Terminid structures the Factions page mentions in prose but not in its enemy tables. */
+const EXTRA_PAGES: FactionIndexEntry[] = [
+  { page: "Shrieker_Nest", name: "Shrieker Nest", faction: "Terminids", strain: null },
+  { page: "Spore_Spewer", name: "Spore Spewer", faction: "Terminids", strain: null },
+];
 
 const { values: options } = parseArgs({
   options: {
     only: { type: "string" },
-    out: { type: "string", default: "enemies.json" },
+    out: { type: "string", default: "src/data/enemies.json" },
     "cache-dir": { type: "string", default: "node_modules/.cache/enemy-sync" },
     refresh: { type: "boolean", default: false },
   },
@@ -70,9 +79,13 @@ async function assertWikiRulesUnchanged(): Promise<void> {
 }
 
 function pagesToRead(index: FactionIndexEntry[]): FactionIndexEntry[] {
-  if (!options.only) return index;
+  const all = [
+    ...index.filter((entry) => !EXCLUDED_PAGES.includes(entry.page)),
+    ...EXTRA_PAGES,
+  ];
+  if (!options.only) return all;
   return options.only.split(",").map((page) => {
-    const listed = index.find((entry) => entry.page === page);
+    const listed = all.find((entry) => entry.page === page);
     return listed ?? { page, name: page, faction: "", strain: null };
   });
 }
@@ -82,10 +95,14 @@ async function main(): Promise<void> {
   const index = parseFactionIndex(await readWikiPage(FACTIONS_PAGE));
   const enemies = [];
   const pagesWithIssues: Record<string, string[]> = {};
+  const pagesWithWarnings: Record<string, string[]> = {};
 
   for (const entry of pagesToRead(index)) {
-    const { name, parts, issues } = parseEnemyPage(await readWikiPage(entry.page));
+    const { name, parts, issues, warnings } = parseEnemyPage(
+      await readWikiPage(entry.page),
+    );
     if (issues.length > 0) pagesWithIssues[entry.page] = issues;
+    if (warnings.length > 0) pagesWithWarnings[entry.page] = warnings;
     if (parts.length > 0) {
       enemies.push({
         id: entry.page.toLowerCase().replace(/_/g, "-"),
@@ -97,6 +114,16 @@ async function main(): Promise<void> {
       });
     }
     console.log(`${entry.page}: ${parts.length} parts, ${issues.length} issues`);
+  }
+
+  if (Object.keys(pagesWithWarnings).length > 0) {
+    console.warn("\nWarnings:", JSON.stringify(pagesWithWarnings, null, 2));
+  }
+  if (Object.keys(pagesWithIssues).length > 0) {
+    console.error("\nIssues:", JSON.stringify(pagesWithIssues, null, 2));
+    console.error(`\nNot writing ${options.out} until these are resolved.`);
+    process.exitCode = 1;
+    return;
   }
 
   mkdirSync(dirname(options.out), { recursive: true });
@@ -116,10 +143,6 @@ async function main(): Promise<void> {
   );
 
   console.log(`\nIndex lists ${index.length} pages. Wrote ${enemies.length} enemies to ${options.out}.`);
-  if (Object.keys(pagesWithIssues).length > 0) {
-    console.error("\nIssues to review:", JSON.stringify(pagesWithIssues, null, 2));
-    process.exitCode = 1;
-  }
 }
 
 await main();

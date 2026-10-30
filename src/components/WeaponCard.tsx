@@ -1,5 +1,4 @@
 import type { CatalogWeapon } from "../data/catalogWeapons";
-import { EXPLOSIVE_AP } from "../logic/damage";
 import type { WeaponControlModel, WeaponGroup } from "../logic/weapons";
 import type { DamageMode, EntryMode } from "../types";
 import { ChargeControls } from "./ChargeControls";
@@ -16,6 +15,8 @@ type ManualWeaponForm = {
   onPenetrationChange: (value: string) => void;
   explosiveDmg: string;
   onExplosiveDmgChange: (value: string) => void;
+  explosivePenetration: string;
+  onExplosivePenetrationChange: (value: string) => void;
 };
 
 type WikiWeaponForm = {
@@ -91,7 +92,7 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
                 {wiki.selectedWeapon.damageMode === "ballistic" &&
                   "Ballistic / non-explosive only"}
                 {wiki.selectedWeapon.damageMode === "explosive" &&
-                  `Explosive only (AP ${EXPLOSIVE_AP} vs armor in this app)`}
+                  "Explosive only"}
                 {wiki.selectedWeapon.damageMode === "combined" &&
                   "Combined (ballistic + listed explosive portion)"}
                 <br />
@@ -102,6 +103,13 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
                 Armor penetration: {wiki.selectedWeapon.penetration}
                 <br />
                 Explosive damage: {wiki.selectedWeapon.explosiveDamage}
+                {wiki.selectedWeapon.explosiveDamage > 0 && (
+                  <>
+                    <br />
+                    Explosive armor penetration:{" "}
+                    {wiki.selectedWeapon.explosivePenetration}
+                  </>
+                )}
               </p>
             </fieldset>
           )}
@@ -126,7 +134,7 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
                 checked={manual.damageMode === "explosive"}
                 onChange={() => manual.onDamageModeChange("explosive")}
               />
-              Explosive only (AP {EXPLOSIVE_AP})
+              Explosive only
             </label>
             <label className="radio">
               <input
@@ -171,19 +179,32 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
 
           {(manual.damageMode === "explosive" ||
             manual.damageMode === "combined") && (
-            <label className="field">
-              <span>Explosive damage (listed explosive)</span>
-              <input
-                inputMode="decimal"
-                value={manual.explosiveDmg}
-                onChange={(e) => manual.onExplosiveDmgChange(e.target.value)}
-              />
-              <small>
-                Explosive uses AP {EXPLOSIVE_AP} vs armor, then × (1 − explosive
-                resistance). Listed value is applied as full “explosive” damage
-                (no standard/durable split on this portion).
-              </small>
-            </label>
+            <>
+              <label className="field">
+                <span>Explosive damage (listed explosive)</span>
+                <input
+                  inputMode="decimal"
+                  value={manual.explosiveDmg}
+                  onChange={(e) => manual.onExplosiveDmgChange(e.target.value)}
+                />
+                <small>
+                  Explosive uses its own AP vs armor, then × (1 − explosive
+                  resistance). Listed value is applied as full “explosive”
+                  damage (no standard/durable split on this portion).
+                </small>
+              </label>
+              <label className="field">
+                <span>Explosive armor penetration (0–10)</span>
+                <input
+                  inputMode="numeric"
+                  value={manual.explosivePenetration}
+                  onChange={(e) =>
+                    manual.onExplosivePenetrationChange(e.target.value)
+                  }
+                />
+                <small>Most explosions are AP 3.</small>
+              </label>
+            </>
           )}
         </>
       )}

@@ -11,7 +11,7 @@ const STRATAGEMS_URL = `${API_ORIGIN}/v1/stratagems.json`;
 const PRIMARIES_URL = `${API_ORIGIN}/v1/weapons/by-category/primary.json`;
 
 /** Bump the suffix when the mapping changes, so browsers drop weapons mapped the old way. */
-const CACHE_KEY = "hd2:weapon-catalog:v3";
+const CACHE_KEY = "hd2:weapon-catalog:v4";
 
 /** The API publishes at most one data update per day. */
 export const CATALOG_MAX_AGE_MS = 24 * 60 * 60 * 1000;

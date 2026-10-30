@@ -21,6 +21,7 @@ export function useWeaponSelection(entryMode: EntryMode) {
   const [durableDmg, setDurableDmg] = useState("23");
   const [penetration, setPenetration] = useState("2");
   const [explosiveDmg, setExplosiveDmg] = useState("150");
+  const [explosivePenetration, setExplosivePenetration] = useState("3");
   const [damageMode, setDamageMode] = useState<DamageMode>("ballistic");
 
   const weaponGroups = useMemo(() => groupWeaponsByKind(weapons), [weapons]);
@@ -52,6 +53,7 @@ export function useWeaponSelection(entryMode: EntryMode) {
           durableDamage: durableDmg,
           penetration,
           explosiveDamage: explosiveDmg,
+          explosivePenetration,
           damageMode,
         });
 
@@ -86,6 +88,8 @@ export function useWeaponSelection(entryMode: EntryMode) {
         onPenetrationChange: setPenetration,
         explosiveDmg,
         onExplosiveDmgChange: setExplosiveDmg,
+        explosivePenetration,
+        onExplosivePenetrationChange: setExplosivePenetration,
       },
       wiki: {
         weaponGroups,

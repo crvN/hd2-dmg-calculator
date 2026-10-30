@@ -16,6 +16,7 @@ export type WeaponShot = {
   durableDamage: number
   penetration: number
   explosiveDamage: number
+  explosivePenetration: number
   damageMode: DamageMode
 }
 
@@ -30,4 +31,5 @@ export type ShotOutcome = {
   shotsToKill: number | null
   ballisticMarker: Hitmarker
   explosiveMarker: Hitmarker
+  explosivePenetration: number
 }

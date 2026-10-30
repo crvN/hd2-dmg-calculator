@@ -11,6 +11,10 @@ describe("shotsToKill", () => {
     expect(shotsToKill(100, -10)).toBeNull();
   });
 
+  it("returns null for a part with infinite health", () => {
+    expect(shotsToKill(Infinity, 500)).toBeNull();
+  });
+
   it("returns the ceiling of hp divided by damage", () => {
     expect(shotsToKill(100, 30)).toBe(4);
     expect(shotsToKill(90, 30)).toBe(3);

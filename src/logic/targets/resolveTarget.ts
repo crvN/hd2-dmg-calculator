@@ -19,13 +19,62 @@ export function resolveManualTarget(fields: ManualTargetFields): TargetStats {
   };
 }
 
+/** The tier in force at a difficulty: the highest one starting at or below it. */
+function tierAtDifficulty<Tier extends { fromDifficulty: number }>(
+  tiers: Tier[],
+  difficulty: number,
+): Tier | undefined {
+  return tiers.findLast((tier) => tier.fromDifficulty <= difficulty);
+}
+
+/** The part whose health this one uses, preferring its own wiki tab when several share a label. */
+function healthPool(
+  part: EnemyBodyPart,
+  enemyParts: EnemyBodyPart[],
+): EnemyBodyPart {
+  if (!part.sharesHealthWith) return part;
+  const named = enemyParts.filter((p) => p.label === part.sharesHealthWith);
+  return named.find((p) => p.section === part.section) ?? named[0] ?? part;
+}
+
+function hitPointsAtDifficulty(
+  part: EnemyBodyPart,
+  enemyParts: EnemyBodyPart[],
+  difficulty: number,
+): number {
+  if (part.hasInfiniteHealth) return Infinity;
+  const { hitPointsByDifficulty } = healthPool(part, enemyParts);
+  return tierAtDifficulty(hitPointsByDifficulty, difficulty)?.hitPoints ?? 0;
+}
+
 export function resolveWikiTarget(
   part: EnemyBodyPart | undefined,
+  enemyParts: EnemyBodyPart[],
+  difficulty: number,
 ): TargetStats {
+  if (!part) {
+    return {
+      hitPoints: 0,
+      durablePercent: 0,
+      armorRating: 0,
+      explosiveResistPercent: 0,
+    };
+  }
   return {
-    hitPoints: part?.hp ?? 0,
-    durablePercent: part?.durablePercent ?? 0,
-    armorRating: part?.armorRating ?? 0,
-    explosiveResistPercent: part?.explosiveResistPercent ?? 0,
+    hitPoints: hitPointsAtDifficulty(part, enemyParts, difficulty),
+    durablePercent: part.durablePercent,
+    armorRating:
+      tierAtDifficulty(part.armorByDifficulty, difficulty)?.armorRating ?? 0,
+    explosiveResistPercent: part.explosiveResistPercent,
   };
+}
+
+/** Name for a part picker: "Armor Broken: Internals (×2)". */
+export function partOptionLabel(part: EnemyBodyPart): string {
+  const name = part.section ? `${part.section}: ${part.label}` : part.label;
+  return part.count > 1 ? `${name} (×${part.count})` : name;
+}
+
+export function formatHitPoints(hitPoints: number): string {
+  return Number.isFinite(hitPoints) ? String(hitPoints) : "Infinite";
 }

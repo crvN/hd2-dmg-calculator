@@ -4,5 +4,6 @@ export {
   mixedBallisticBaseDamage,
 } from "./ballistic";
 export { calculateShot } from "./calculateShot";
-export { EXPLOSIVE_AP, explosiveDamageAfterArmor } from "./explosive";
+export { explosiveDamageAfterArmor } from "./explosive";
+export { floorDamage } from "./rounding";
 export { shotsToKill } from "./shotsToKill";

@@ -8,6 +8,7 @@ export type ManualWeaponFields = {
   durableDamage: string;
   penetration: string;
   explosiveDamage: string;
+  explosivePenetration: string;
   damageMode: DamageMode;
 };
 
@@ -17,6 +18,7 @@ export function resolveManualWeapon(fields: ManualWeaponFields): WeaponShot {
     durableDamage: toNumber(fields.durableDamage),
     penetration: toNumber(fields.penetration),
     explosiveDamage: toNumber(fields.explosiveDamage),
+    explosivePenetration: toNumber(fields.explosivePenetration),
     damageMode: fields.damageMode,
   };
 }
@@ -30,6 +32,7 @@ export function resolveWikiWeapon(
     durableDamage: (weapon?.durableDamage ?? 0) * damageMultiplier,
     penetration: weapon?.penetration ?? 0,
     explosiveDamage: weapon?.explosiveDamage ?? 0,
+    explosivePenetration: weapon?.explosivePenetration ?? 0,
     damageMode: weapon?.damageMode ?? "ballistic",
   };
 }

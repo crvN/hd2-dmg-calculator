@@ -1,3 +1,4 @@
+import { ENEMY_SNAPSHOT_DATE } from "../data";
 import type { WeaponCatalogStatus } from "../hooks/useWeaponCatalog";
 
 type WikiDataNoteProps = {
@@ -19,10 +20,10 @@ export function WikiDataNote({ status, dataVersion }: WikiDataNoteProps) {
           CC BY-NC-SA 4.0
         </a>
         {dataVersion && ` (data version ${dataVersion})`}, cached for one day.
-        Enemy body parts are a curated snapshot of{" "}
-        <a href="https://helldivers.wiki.gg/wiki/Terminids">Terminids</a> /{" "}
-        <a href="https://helldivers.wiki.gg/wiki/Automatons">Automatons</a>;
-        patch changes may drift.
+        Enemy stats are a snapshot of{" "}
+        <a href="https://helldivers.wiki.gg/wiki/Factions">the same wiki</a>{" "}
+        from {ENEMY_SNAPSHOT_DATE}; patch changes may drift. Part pictures load
+        from the wiki.
       </p>
       {status === "loading" && <p role="status">Loading weapons…</p>}
       {status === "stale" && (

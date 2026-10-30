@@ -1,7 +1,7 @@
 import type { DamageMode, ShotInput, ShotOutcome } from "../../types";
 import { hitmarkerFor } from "./armor";
 import { ballisticDamageAfterArmor } from "./ballistic";
-import { EXPLOSIVE_AP, explosiveDamageAfterArmor } from "./explosive";
+import { explosiveDamageAfterArmor } from "./explosive";
 import { shotsToKill } from "./shotsToKill";
 
 function dealsBallisticDamage(mode: DamageMode): boolean {
@@ -26,6 +26,7 @@ export function calculateShot(input: ShotInput): ShotOutcome {
   const explosiveDamage = dealsExplosiveDamage(input.damageMode)
     ? explosiveDamageAfterArmor(
         input.explosiveDamage,
+        input.explosivePenetration,
         input.armorRating,
         input.explosiveResistPercent,
       )
@@ -40,6 +41,10 @@ export function calculateShot(input: ShotInput): ShotOutcome {
     totalDamage,
     shotsToKill: shotsToKill(input.hitPoints, totalDamage),
     ballisticMarker: hitmarkerFor(input.penetration, input.armorRating),
-    explosiveMarker: hitmarkerFor(EXPLOSIVE_AP, input.armorRating),
+    explosiveMarker: hitmarkerFor(
+      input.explosivePenetration,
+      input.armorRating,
+    ),
+    explosivePenetration: input.explosivePenetration,
   };
 }

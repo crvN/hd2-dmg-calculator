@@ -10,6 +10,7 @@ const plainWeapon: CatalogWeapon = {
   penetration: 3,
   damageMode: "ballistic",
   explosiveDamage: 0,
+  explosivePenetration: 3,
 };
 
 const chargedWeapon: CatalogWeapon = {

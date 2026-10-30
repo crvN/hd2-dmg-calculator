@@ -10,6 +10,7 @@ const weapon: CatalogWeapon = {
   penetration: 4,
   damageMode: "combined",
   explosiveDamage: 150,
+  explosivePenetration: 5,
 };
 
 describe("resolveManualWeapon", () => {
@@ -19,11 +20,13 @@ describe("resolveManualWeapon", () => {
       durableDamage: "23",
       penetration: "3",
       explosiveDamage: "150",
+      explosivePenetration: "4",
       damageMode: "ballistic",
     });
 
     expect(shot.standardDamage).toBe(95);
     expect(shot.penetration).toBe(3);
+    expect(shot.explosivePenetration).toBe(4);
     expect(shot.damageMode).toBe("ballistic");
   });
 
@@ -33,6 +36,7 @@ describe("resolveManualWeapon", () => {
       durableDamage: "abc",
       penetration: "",
       explosiveDamage: "",
+      explosivePenetration: "",
       damageMode: "combined",
     });
 
@@ -47,6 +51,7 @@ describe("resolveWikiWeapon", () => {
 
     expect(shot.standardDamage).toBe(200);
     expect(shot.penetration).toBe(4);
+    expect(shot.explosivePenetration).toBe(5);
     expect(shot.damageMode).toBe("combined");
   });
 

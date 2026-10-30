@@ -19,6 +19,7 @@ All of that math lives in plain TypeScript modules — never inside components.
 | `src/logic/shared/` | Cross-cutting primitives only (clamping, number parsing) |
 | `src/data/` | Static game data tables, no functions |
 | `src/services/` | I/O boundary: persistence, URL state, remote data. Nothing pure belongs here |
+| `scripts/` | Build-time tools that generate `src/data/` files, such as the wiki enemy sync. Never imported by the app |
 
 Each folder has an `index.ts` barrel; import from the folder (`../logic/damage`), not from deep paths.
 A new file per game rule beats a growing `misc.ts`. If something doesn't fit a folder, it needs a new one —
@@ -41,7 +42,7 @@ variant if it needs a player-facing control); hooks and components stay unchange
 // good — each step is a rule you can name, test, and read
 const mixed = mixedBallisticBaseDamage(standard, durable, durablePercent)
 const multiplier = armorDamageMultiplier(penetration, armor)
-const perShot = Math.floor(mixed * multiplier)
+const perShot = floorDamage(mixed * multiplier)
 const shots = shotsToKill(hp, perShot)
 ```
 
@@ -61,6 +62,7 @@ export function ballisticDamageAfterArmor(input: BallisticShot): number
 
 - Rounding is part of the game rule — state where it happens with a one-line comment referencing the source
   (wiki/spreadsheet formula) and keep it in the function that owns the rule.
+- Round damage down once per damage source, at the end, with `floorDamage`. Bare `Math.floor` loses points to float noise.
 - Impossible-to-kill must be representable: return `null` from `shotsToKill` for non-positive damage, never `Infinity`.
 - Clamp at the boundary (`clampPercent`, `clampArmor`), not repeatedly inside the math.
 
