@@ -1,8 +1,9 @@
-import type { SupportWeaponPreset } from "../data/supportWeapons";
+import type { CatalogWeapon } from "../data/catalogWeapons";
 import { EXPLOSIVE_AP } from "../logic/damage";
-import type { WeaponControlModel } from "../logic/weapons";
+import type { WeaponControlModel, WeaponGroup } from "../logic/weapons";
 import type { DamageMode, EntryMode } from "../types";
 import { ChargeControls } from "./ChargeControls";
+import { SearchableSelect } from "./SearchableSelect";
 
 type ManualWeaponForm = {
   damageMode: DamageMode;
@@ -18,10 +19,13 @@ type ManualWeaponForm = {
 };
 
 type WikiWeaponForm = {
+  weaponGroups: WeaponGroup[];
+  wikiGroupKind: string;
+  onWikiGroupChange: (value: string) => void;
+  groupWeapons: CatalogWeapon[];
   wikiWeaponId: string;
   onWikiWeaponChange: (value: string) => void;
-  weapons: SupportWeaponPreset[];
-  selectedWeapon?: SupportWeaponPreset;
+  selectedWeapon?: CatalogWeapon;
   control: WeaponControlModel;
   onChargeSecondsChange: (seconds: number) => void;
 };
@@ -39,19 +43,38 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
       {entryMode === "wiki" ? (
         <>
           <label className="field">
-            <span>Support weapon</span>
+            <span>Type</span>
             <select
               className="select"
-              value={wiki.wikiWeaponId}
-              onChange={(e) => wiki.onWikiWeaponChange(e.target.value)}
+              value={wiki.wikiGroupKind}
+              disabled={wiki.weaponGroups.length === 0}
+              onChange={(e) => wiki.onWikiGroupChange(e.target.value)}
             >
-              {wiki.weapons.map((weapon) => (
-                <option key={weapon.id} value={weapon.id}>
-                  {weapon.name}
+              {wiki.weaponGroups.map((group) => (
+                <option key={group.kind} value={group.kind}>
+                  {group.label}
                 </option>
               ))}
             </select>
           </label>
+          <SearchableSelect
+            label="Weapon"
+            value={wiki.wikiWeaponId}
+            options={wiki.groupWeapons.map((weapon) => ({
+              id: weapon.id,
+              label: weapon.name,
+            }))}
+            disabled={wiki.groupWeapons.length === 0}
+            onChange={wiki.onWikiWeaponChange}
+          />
+          {wiki.selectedWeapon?.imageUrl && (
+            <img
+              key={wiki.selectedWeapon.imageUrl}
+              className="weapon-image"
+              src={wiki.selectedWeapon.imageUrl}
+              alt={wiki.selectedWeapon.name}
+            />
+          )}
           {wiki.selectedWeapon?.notes && (
             <p className="muted fineprint">{wiki.selectedWeapon.notes}</p>
           )}
@@ -61,21 +84,27 @@ export function WeaponCard({ entryMode, manual, wiki }: WeaponCardProps) {
               onSecondsChange={wiki.onChargeSecondsChange}
             />
           )}
-          <fieldset className="mode wiki-readonly-mode">
-            <legend>Damage profile (from preset)</legend>
-            <p className="muted fineprint no-margin">
-              {wiki.selectedWeapon?.damageMode === "ballistic" &&
-                "Ballistic / non-explosive only"}
-              {wiki.selectedWeapon?.damageMode === "explosive" &&
-                `Explosive only (AP ${EXPLOSIVE_AP} vs armor in this app)`}
-              {wiki.selectedWeapon?.damageMode === "combined" &&
-                "Combined (ballistic + listed explosive portion)"}
-              <br />
-              Standard damage: {wiki.selectedWeapon?.standardDamage}
-              <br />
-              Durable damage: {wiki.selectedWeapon?.durableDamage}
-            </p>
-          </fieldset>
+          {wiki.selectedWeapon && (
+            <fieldset className="mode wiki-readonly-mode">
+              <legend>Damage profile (from API)</legend>
+              <p className="muted fineprint no-margin">
+                {wiki.selectedWeapon.damageMode === "ballistic" &&
+                  "Ballistic / non-explosive only"}
+                {wiki.selectedWeapon.damageMode === "explosive" &&
+                  `Explosive only (AP ${EXPLOSIVE_AP} vs armor in this app)`}
+                {wiki.selectedWeapon.damageMode === "combined" &&
+                  "Combined (ballistic + listed explosive portion)"}
+                <br />
+                Standard damage: {wiki.selectedWeapon.standardDamage}
+                <br />
+                Durable damage: {wiki.selectedWeapon.durableDamage}
+                <br />
+                Armor penetration: {wiki.selectedWeapon.penetration}
+                <br />
+                Explosive damage: {wiki.selectedWeapon.explosiveDamage}
+              </p>
+            </fieldset>
+          )}
         </>
       ) : (
         <>

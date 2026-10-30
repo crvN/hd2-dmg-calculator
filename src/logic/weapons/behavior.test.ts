@@ -1,8 +1,9 @@
-import type { SupportWeaponPreset } from "../../data/supportWeapons";
+import type { CatalogWeapon } from "../../data/catalogWeapons";
 import { DEFAULT_WEAPON_TUNING, weaponBehaviorFor } from "./behavior";
 
-const plainWeapon: SupportWeaponPreset = {
+const plainWeapon: CatalogWeapon = {
   id: "mg-43",
+  kind: "support_weapon",
   name: "MG-43",
   standardDamage: 90,
   durableDamage: 23,
@@ -11,7 +12,7 @@ const plainWeapon: SupportWeaponPreset = {
   explosiveDamage: 0,
 };
 
-const chargedWeapon: SupportWeaponPreset = {
+const chargedWeapon: CatalogWeapon = {
   ...plainWeapon,
   id: "rs-422",
   name: "Railgun",

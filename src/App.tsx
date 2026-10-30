@@ -3,12 +3,21 @@ import { EntryModeTabs } from "./components/EntryModeTabs";
 import { ResultCard } from "./components/ResultCard";
 import { TargetCard } from "./components/TargetCard";
 import { WeaponCard } from "./components/WeaponCard";
+import { WikiDataNote } from "./components/WikiDataNote";
 import { useShotCalculator } from "./hooks/useShotCalculator";
 import "./App.css";
 
 export default function App() {
-  const { entryMode, setEntryMode, outcome, targetCardProps, weaponCardProps } =
-    useShotCalculator();
+  const {
+    entryMode,
+    setEntryMode,
+    outcome,
+    isMissingWeapon,
+    catalogStatus,
+    catalogDataVersion,
+    targetCardProps,
+    weaponCardProps,
+  } = useShotCalculator();
 
   return (
     <div className="app">
@@ -16,13 +25,7 @@ export default function App() {
       <EntryModeTabs entryMode={entryMode} onChange={setEntryMode} />
 
       {entryMode === "wiki" && (
-        <p className="wiki-note muted">
-          Support weapons and wiki body parts from{" "}
-          <a href="https://helldivers.wiki.gg/wiki/Stratagems">Stratagems</a> /{" "}
-          <a href="https://helldivers.wiki.gg/wiki/Terminids">Terminids</a> /{" "}
-          <a href="https://helldivers.wiki.gg/wiki/Automatons">Automatons</a>.
-          Values are a curated snapshot; patch changes may drift.
-        </p>
+        <WikiDataNote status={catalogStatus} dataVersion={catalogDataVersion} />
       )}
 
       <div className="grid">
@@ -30,7 +33,7 @@ export default function App() {
         <WeaponCard {...weaponCardProps} />
       </div>
 
-      <ResultCard outcome={outcome} />
+      {!isMissingWeapon && <ResultCard outcome={outcome} />}
     </div>
   );
 }

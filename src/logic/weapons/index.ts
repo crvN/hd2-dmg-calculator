@@ -17,3 +17,11 @@ export {
   resolveWikiWeapon,
   type ManualWeaponFields,
 } from "./resolveWeapon";
+export {
+  catalogWeaponsFrom,
+  groupWeaponsByKind,
+  penetrationRating,
+  primaryWeaponsFrom,
+  stratagemWeaponsFrom,
+  type WeaponGroup,
+} from "./catalogWeapons";
